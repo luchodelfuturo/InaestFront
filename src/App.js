@@ -28,7 +28,7 @@ function App() {
             console.log('Respuesta del servidor:', response.data);
             if (response.data.filePath) {
                 // Ajustar la URL del archivo generado para incluir el puerto 5000
-                setFileUrl(`http://localhost:5000${response.data.filePath}`);
+                setFileUrl(`inaesbot.vercel.app${response.data.filePath}`);
             } else {
                 alert(response.data.message);
             }
