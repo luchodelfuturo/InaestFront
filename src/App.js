@@ -20,11 +20,7 @@ function App() {
         console.log('Enviando archivos:', sociosFile, prestamosFile);
 
         try {
-            const response = await axios.post(`https://inaesbot.vercel.app/api/upload`, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            });
+            const response = await axios.post(`https://inaesbot.vercel.app/api/upload`, formData);
             console.log('Respuesta del servidor:', response.data);
             if (response.data.filePath) {
                 setFileUrl(`https://inaesbot.vercel.app${response.data.filePath}`);
@@ -33,7 +29,18 @@ function App() {
             }
         } catch (error) {
             console.error('Error uploading files:', error);
-            alert('Error uploading files: ' + error.message);
+
+            // Verificar si el error está relacionado con CORS o con el backend
+            if (error.response) {
+                console.error('Error en la respuesta del servidor:', error.response.data);
+                alert('Error del servidor: ' + error.response.data.message);
+            } else if (error.request) {
+                console.error('No hubo respuesta del servidor:', error.request);
+                alert('No se pudo conectar con el servidor. Verificá la configuración del backend.');
+            } else {
+                console.error('Error al realizar la solicitud:', error.message);
+                alert('Error al realizar la solicitud: ' + error.message);
+            }
         }
     };
 
