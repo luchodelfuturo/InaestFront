@@ -35,14 +35,20 @@ function App() {
             // Subir archivos a Firebase Storage
             const sociosUrl = await uploadToFirebase(sociosFile, 'socios');
             const prestamosUrl = await uploadToFirebase(prestamosFile, 'prestamos');
-            console.log("Se subieron a firestore wi..")
+    
             // Enviar las URLs al backend para que procese los archivos
             const response = await axios.post('https://inaesbot.vercel.app/api/process-files', {
                 sociosUrl,
                 prestamosUrl
-            });
+            }, { responseType: 'blob' });  // Asegurarte de que la respuesta es un archivo (blob)
     
-            alert("Archivos procesados exitosamente por el backend");
+            // Crear un enlace de descarga para el archivo recibido
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'alta_deudores.txt');  // Nombre del archivo
+            document.body.appendChild(link);
+            link.click();
         } catch (error) {
             console.error('Error al subir o procesar archivos:', error);
             alert('Error: ' + error.message);
