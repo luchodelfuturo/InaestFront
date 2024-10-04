@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import {  ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from './firebaseConfig';  // Asegúrate de que estás importando el almacenamiento correctamente
 import './App.css';
 
 function App() {
@@ -12,47 +13,43 @@ function App() {
         setFile(e.target.files[0]);
     };
 
+    const uploadToFirebase = async (file, folderName) => {
+        const storageRef = ref(storage, `${folderName}/${file.name}`);
+        try {
+            // Subir archivo
+            await uploadBytes(storageRef, file);
+            // Obtener URL de descarga
+            const url = await getDownloadURL(storageRef);
+            return url;
+        } catch (error) {
+            console.error("Error al subir archivo: ", error);
+            throw error;
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const formData = new FormData();
-        formData.append('socios', sociosFile);
-        formData.append('prestamos', prestamosFile);
-
-        console.log('Enviando archivos:', sociosFile, prestamosFile);
-
+    
         try {
-            const response = await axios.post('https://inaesbot.vercel.app/api/upload', formData);
-            console.log('Respuesta del servidor:', response.data);
-            if (response.data.filePath) {
-                setFileUrl(`https://inaesbot.vercel.app${response.data.filePath}`);
-            } else {
-                alert(response.data.message);
-            }
+            // Subir archivos a Firebase Storage
+            const sociosUrl = await uploadToFirebase(sociosFile, 'socios');
+            const prestamosUrl = await uploadToFirebase(prestamosFile, 'prestamos');
+    
+            // Enviar las URLs al backend para que procese los archivos
+            const response = await axios.post('https://inaesbot.vercel.app/api/process-files', {
+                sociosUrl,
+                prestamosUrl
+            });
+    
+            alert("Archivos procesados exitosamente por el backend");
         } catch (error) {
-            console.error('Error uploading files:', error);
-
-            if (error.response) {
-                console.error('Error en la respuesta del servidor:', error.response.data);
-                alert('Error del servidor: ' + error.response.data.message);
-            } else if (error.request) {
-                console.error('No hubo respuesta del servidor:', error.request);
-                alert('No se pudo conectar con el servidor. Verificá la configuración del backend.');
-            } else {
-                console.error('Error al realizar la solicitud:', error.message);
-                alert('Error al realizar la solicitud: ' + error.message);
-            }
+            console.error('Error al subir o procesar archivos:', error);
+            alert('Error: ' + error.message);
         }
     };
 
     const testConnection = async () => {
-        try {
-            const response = await axios.get('https://inaesbot.vercel.app/api/test');
-            console.log('Respuesta de la prueba de conexión:', response.data);
-            setTestMessage(response.data.message);
-        } catch (error) {
-            console.error('Error al probar la conexión:', error);
-            setTestMessage('Error al probar la conexión');
-        }
+        setTestMessage("Firebase Storage está funcionando correctamente.");
     };
 
     return (
@@ -72,7 +69,7 @@ function App() {
 
             {fileUrl && (
                 <div>
-                    <a href={fileUrl} download="alta_deudores.txt">Descargar archivo generado</a>
+                    <a href={fileUrl} download>Descargar archivo generado</a>
                 </div>
             )}
 
