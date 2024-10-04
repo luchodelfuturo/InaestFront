@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {  ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from './firebaseConfig';  // Asegúrate de que estás importando el almacenamiento correctamente
 import './App.css';
+import axios from 'axios';
 
 function App() {
     const [sociosFile, setSociosFile] = useState(null);
@@ -34,7 +35,7 @@ function App() {
             // Subir archivos a Firebase Storage
             const sociosUrl = await uploadToFirebase(sociosFile, 'socios');
             const prestamosUrl = await uploadToFirebase(prestamosFile, 'prestamos');
-    
+            console.log("Se subieron a firestore wi..")
             // Enviar las URLs al backend para que procese los archivos
             const response = await axios.post('https://inaesbot.vercel.app/api/process-files', {
                 sociosUrl,
