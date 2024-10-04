@@ -6,6 +6,7 @@ function App() {
     const [sociosFile, setSociosFile] = useState(null);
     const [prestamosFile, setPrestamosFile] = useState(null);
     const [fileUrl, setFileUrl] = useState(null);
+    const [testMessage, setTestMessage] = useState('');
 
     const handleFileChange = (e, setFile) => {
         setFile(e.target.files[0]);
@@ -34,7 +35,6 @@ function App() {
         } catch (error) {
             console.error('Error uploading files:', error);
 
-            // Verificar si el error está relacionado con CORS o con el backend
             if (error.response) {
                 console.error('Error en la respuesta del servidor:', error.response.data);
                 alert('Error del servidor: ' + error.response.data.message);
@@ -45,6 +45,17 @@ function App() {
                 console.error('Error al realizar la solicitud:', error.message);
                 alert('Error al realizar la solicitud: ' + error.message);
             }
+        }
+    };
+
+    const testConnection = async () => {
+        try {
+            const response = await axios.get('https://inaesbot.vercel.app/api/test');
+            console.log('Respuesta de la prueba de conexión:', response.data);
+            setTestMessage(response.data.message);
+        } catch (error) {
+            console.error('Error al probar la conexión:', error);
+            setTestMessage('Error al probar la conexión');
         }
     };
 
@@ -62,11 +73,18 @@ function App() {
                 </div>
                 <button type="submit">Subir y Procesar</button>
             </form>
+
             {fileUrl && (
                 <div>
                     <a href={fileUrl} download="alta_deudores.txt">Descargar archivo generado</a>
                 </div>
             )}
+
+            <div style={{ marginTop: '20px' }}>
+                <h2>Prueba de Conexión</h2>
+                <button onClick={testConnection}>Testear Conexión</button>
+                {testMessage && <p>{testMessage}</p>}
+            </div>
         </div>
     );
 }
