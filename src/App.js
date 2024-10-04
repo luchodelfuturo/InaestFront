@@ -20,14 +20,13 @@ function App() {
         console.log('Enviando archivos:', sociosFile, prestamosFile);
 
         try {
-            const response = await axios.post('https://inaesbot.vercel.app/api/upload', formData, {
+            const response = await axios.post(`https://inaesbot.vercel.app/api/upload`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
             });
             console.log('Respuesta del servidor:', response.data);
             if (response.data.filePath) {
-                // Ajustar la URL del archivo generado para incluir el dominio del backend
                 setFileUrl(`https://inaesbot.vercel.app${response.data.filePath}`);
             } else {
                 alert(response.data.message);
