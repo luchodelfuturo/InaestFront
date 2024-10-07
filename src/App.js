@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
 import "./App.css"
+import { 
+    procesarArchivos,
+} from './utils/procesamiento'; // Ajusta la ruta según la ubicación real
+
+// Asegúrate de importar generarArchivoTxt si está en otro archivo
+import { generarArchivoTxt } from './utils/generarArchivoTxt'; // Ajusta la ruta según la ubicación real
 
 function App() {
     const [sociosFile, setSociosFile] = useState(null);
@@ -10,92 +15,66 @@ function App() {
     const [statusMessage, setStatusMessage] = useState(''); // Estado para mostrar el estado
 
     const handleFileChange = (e, setFile) => {
-        setFile(e.target.files[0]);
+        const file = e.target.files[0];
+        if (file && file.type !== "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") {
+            setStatusMessage("Por favor, selecciona un archivo Excel válido.");
+            return;
+        }
+        setFile(file);
         setStatusMessage(''); // Limpiar el mensaje de estado
-    };
-
-    const procesarArchivos = (sociosData, prestamosData) => {
-        console.log("Procesando archivos...");
-        const sociosMap = sociosData.reduce((map, socio) => {
-            map[socio['LEGAJO BBVA']] = socio;
-            return map;
-        }, {});
-
-        const mergedData = prestamosData.map(prestamo => {
-            const socio = sociosMap[prestamo['LEGAJO']] || {};
-            return { ...prestamo, ...socio };
-        });
-
-        console.log("Archivos procesados con éxito");
-        return mergedData;
-    };
-
-    const generarArchivoTxt = (data) => {
-        let contenido = '';
-
-        data.forEach(row => {
-            const linea = `${(row['NRO. de CUIL'] || '').toString().padStart(11, ' ')}`
-                + `${(row['TIPO DOC'] || '').toString().padStart(3, ' ')}`
-                + `${(row['NUMERO'] || '').toString().padStart(20, ' ')}`
-                + `${(row['Apellido y Nombres'] || '').toString().padStart(70, ' ')}`
-                + `${(row['Fecha Ing Mutal'] || '').toString().padStart(8, ' ')}`
-                + `${(row['Sexo'] || '').toString().padStart(1, ' ')}`
-                + `${(row['ESTADO DE PMOS '] || '').toString().padStart(1, ' ')}`
-                + `${(row['Domicilio'] || '').toString().padStart(40, ' ')}`
-                + `${(row['LOCALIDAD'] || '').toString().padStart(20, ' ')}`
-                + `${(row['PROVINCIA.'] || '').toString().padStart(1, ' ')}`
-                + `${(row['CODIGO POSTAL'] || '').toString().padStart(8, ' ')}`
-                + `${(row['TELEFONO_FIJO'] || '').toString().padStart(14, ' ')}`
-                + `${(row['TELEFONO_CELULAR'] || '').toString().padStart(14, ' ')}`
-                + `${(row['NACIONALIDAD'] || '').toString().padStart(1, ' ')}`
-                + `${(row['RETORNO'] || '').toString().padStart(2, ' ')}`
-                + `${''.padStart(69, ' ')}\r\n`;
-            contenido += linea;
-        });
-
-        console.log("Generando archivo TXT...");
-        const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8' });
-        saveAs(blob, 'alta_deudores.txt');
-        console.log("Archivo TXT generado y listo para descarga.");
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsProcessing(true); // Mostrar el loader
-        setStatusMessage("Procesando archivos...");
-
+        setStatusMessage("Leyendo archivo de socios...");
+    
         try {
             const sociosReader = new FileReader();
             const prestamosReader = new FileReader();
-
+    
             sociosReader.onload = (e) => {
                 console.log("Leyendo archivo de socios...");
-                const sociosWorkbook = XLSX.read(e.target.result, { type: 'binary' });
+                const arrayBuffer = e.target.result;
+                const sociosWorkbook = XLSX.read(arrayBuffer, { type: 'array' });
                 const sociosSheet = sociosWorkbook.Sheets[sociosWorkbook.SheetNames[0]];
                 const sociosData = XLSX.utils.sheet_to_json(sociosSheet);
-
+    
+                setStatusMessage("Leyendo archivo de préstamos...");
+    
                 prestamosReader.onload = (e) => {
                     console.log("Leyendo archivo de préstamos...");
-                    const prestamosWorkbook = XLSX.read(e.target.result, { type: 'binary' });
+                    const arrayBuffer = e.target.result;
+                    const prestamosWorkbook = XLSX.read(arrayBuffer, { type: 'array' });
                     const prestamosSheet = prestamosWorkbook.Sheets[prestamosWorkbook.SheetNames[0]];
                     const prestamosData = XLSX.utils.sheet_to_json(prestamosSheet, { range: 4 });
-
+    
                     // Procesar los archivos
+                    setStatusMessage("Procesando archivos...");
                     const mergedData = procesarArchivos(sociosData, prestamosData);
-                    generarArchivoTxt(mergedData); // Generar y descargar el archivo
-
+    
+                    // Generar y descargar el archivo
+                    generarArchivoTxt(mergedData);
+    
                     setIsProcessing(false); // Ocultar el loader
                     setStatusMessage("Archivos procesados correctamente.");
+    
+                    // Limpiar los archivos seleccionados
+                    setSociosFile(null);
+                    setPrestamosFile(null);
                 };
-                prestamosReader.readAsBinaryString(prestamosFile);
+    
+                prestamosReader.readAsArrayBuffer(prestamosFile);
             };
-            sociosReader.readAsBinaryString(sociosFile);
+    
+            sociosReader.readAsArrayBuffer(sociosFile);
         } catch (error) {
             console.error("Error durante el procesamiento:", error);
             setIsProcessing(false);
-            setStatusMessage("Ocurrió un error al procesar los archivos.");
+            setStatusMessage("Ocurrió un error al procesar los archivos. Verifica el formato.");
         }
     };
+    
 
     return (
         <div className="App">
