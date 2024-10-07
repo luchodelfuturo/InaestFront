@@ -45,26 +45,80 @@ export const validarDireccion = (valor, legajo, campo) => {
     return valorValidado;
 };
 
+export const reemplazarEnie = (texto) => {
+    // Si el valor es null o undefined, lo convertimos a una cadena vacía
+    if (texto === null || texto === undefined) {
+        texto = '';
+    }
+
+    // Asegurarnos de que siempre es una cadena
+    texto = String(texto);
+
+    // Reemplazar ñ por n
+    return texto.replace(/ñ/g, 'n').replace(/Ñ/g, 'N');
+};
+
+export const eliminarAcentos = (texto) => {
+    return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // Eliminar diacríticos (acentos y diéresis)
+};
+
+
+//asegurarnos de que no contenga acentos, diéresis o 
+//caracteres no válidos, excepto los caracteres especiales permitidos como guion (-), barra (/), y el símbolo &.
+
+export const validarContenido = (data) => {
+    return data.map((row) => {
+        // Iterar sobre cada campo del objeto (fila de datos)
+        for (let key in row) {
+            if (row.hasOwnProperty(key)) {
+                let valor = row[key];
+
+                // Convertir a string si es necesario
+                if (valor !== null && valor !== undefined) {
+                    valor = String(valor);
+                } else {
+                    valor = ''; // Si es null o undefined, asignar un valor vacío
+                }
+
+                // Reemplazar ñ por n, eliminar acentos y diéresis
+                valor = eliminarAcentos(reemplazarEnie(valor));
+
+                // Permitir solo letras, números, espacios, guion, barra y símbolo &
+                valor = valor.replace(/[^A-Za-z0-9\s\-\/&]/g, '');
+
+                // Asignar el valor procesado de vuelta al objeto
+                row[key] = valor;
+            }
+        }
+
+        return row; // Retornar la fila validada
+    });
+};
+
+
+
 export const validarCampos = (data) => {
     return data.map((row) => {
         const legajo = row['LEGAJO'] || 'sin legajo'; // Valor del LEGAJO o un valor por defecto si no existe
 
-        // Validación del campo "Apellido y Nombres"
+        // Validación del campo "Apellido y Nombres" (incluyendo reemplazo de ñ por n)
         if (row['Apellido y Nombres']) {
-            const nombreValidado = validarNombre(row['Apellido y Nombres'], legajo);
+            let nombreSinEnie = reemplazarEnie(row['Apellido y Nombres']); // Reemplazar ñ por n
+            const nombreValidado = validarNombre(nombreSinEnie, legajo);
             if (!nombreValidado) {
                 return null; // Si la validación falla, detener el proceso
             }
-            row['Apellido y Nombres'] = nombreValidado;
+            row['Apellido y Nombres'] = nombreValidado; // Guardar el nombre modificado
         }
 
-        // Validación del campo "Domicilio" (Obligatorio)
+        // Validación del campo "Domicilio" (Obligatorio, incluyendo reemplazo de ñ por n)
         if (row['Domicilio']) {
-            const domicilioValidado = validarDireccion(row['Domicilio'], legajo, 'Domicilio');
+            let domicilioSinEnie = reemplazarEnie(row['Domicilio']); // Reemplazar ñ por n
+            const domicilioValidado = validarDireccion(domicilioSinEnie, legajo, 'Domicilio');
             if (!domicilioValidado) {
                 return null; // Si la validación falla, detener el proceso
             }
-            row['Domicilio'] = domicilioValidado;
+            row['Domicilio'] = domicilioValidado; // Guardar el domicilio modificado
         } else {
             // Mostrar un mensaje si el campo "Domicilio" está vacío
             Swal.fire({
@@ -75,14 +129,14 @@ export const validarCampos = (data) => {
             return null;
         }
 
-        // Validación del campo "Altura" (Obligatorio)
+        // Validación del campo "Altura" (Obligatorio, aunque no debería tener ñ, lo consideramos)
         if (row['Altura'] !== undefined && row['Altura'] !== null) {
-            // Convertir "Altura" a cadena si es un número
-            const alturaValidada = validarDireccion(String(row['Altura']), legajo, 'Altura');
+            let alturaSinEnie = reemplazarEnie(String(row['Altura'])); // Convertir a string y reemplazar ñ por n
+            const alturaValidada = validarDireccion(alturaSinEnie, legajo, 'Altura');
             if (!alturaValidada) {
                 return null; // Si la validación falla, detener el proceso
             }
-            row['Altura'] = alturaValidada;
+            row['Altura'] = alturaValidada; // Guardar la altura modificada
         } else {
             // Mostrar un mensaje si el campo "Altura" está vacío
             Swal.fire({
@@ -99,8 +153,12 @@ export const validarCampos = (data) => {
     });
 };
 
+
 export const procesarArchivos = (sociosData, prestamosData) => {
+
     console.log("Procesando archivos...");
+    console.log("prestamos data ", prestamosData);
+
     const sociosMap = sociosData.reduce((map, socio) => {
         map[socio['LEGAJO BBVA']] = socio;
         return map;
@@ -116,7 +174,15 @@ export const procesarArchivos = (sociosData, prestamosData) => {
     // Validar los datos procesados
     const datosValidados = validarCampos(mergedData);
 
+    if (!datosValidados) {
+        console.log("Error durante la validación de campos");
+        return null; // Detener si la validación de campos falla
+    }
+
+    // Aplicar la validación de contenido a los datos procesados
+    const datosProcesados = validarContenido(datosValidados);
 
     console.log("Archivos procesados con éxito");
-    return datosValidados;
+    return datosProcesados;
 };
+
