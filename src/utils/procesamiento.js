@@ -63,16 +63,41 @@ export const eliminarAcentos = (texto) => {
     return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // Eliminar diacríticos (acentos y diéresis)
 };
 
+const esNumero = (valor) => {
+    return !isNaN(valor) && !isNaN(parseFloat(valor)); // Verifica si es un número válido
+};
+
+const truncarMiles = (valor) => {
+    if (esNumero(valor)) {
+        return Math.floor(valor / 1000); // Truncar en miles
+    }
+    return valor; // Si no es un número, devolver el valor tal cual
+};
+
+
 
 //asegurarnos de que no contenga acentos, diéresis o 
 //caracteres no válidos, excepto los caracteres especiales permitidos como guion (-), barra (/), y el símbolo &.
 
 export const validarContenido = (data) => {
+    const camposSaldos = ['CUOTA', 'CUOTA MUTUAL', 'CUOTA SEPTIEMBRE', 'DEUDA', 'IMPORTE', 'TOTAL'];
+
     return data.map((row) => {
         // Iterar sobre cada campo del objeto (fila de datos)
         for (let key in row) {
             if (row.hasOwnProperty(key)) {
                 let valor = row[key];
+
+                // Si el valor es numérico y es uno de los campos de saldos, truncar en miles de pesos
+                if (camposSaldos.includes(key) && esNumero(valor)) {
+                    row[key] = truncarMiles(valor);
+                    continue; // Pasar al siguiente campo
+                }
+
+                // Si el valor es numérico y no es un saldo, no hacer nada
+                if (esNumero(valor)) {
+                    continue; // Saltar la validación para este campo, ya que es numérico
+                }
 
                 // Convertir a string si es necesario
                 if (valor !== null && valor !== undefined) {
@@ -95,7 +120,6 @@ export const validarContenido = (data) => {
         return row; // Retornar la fila validada
     });
 };
-
 
 
 export const validarCampos = (data) => {
