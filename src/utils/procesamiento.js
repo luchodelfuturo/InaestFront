@@ -2,6 +2,7 @@
 // validaciones
 import Swal from 'sweetalert2';
 
+
 export const validarNombre = (nombre, legajo) => {
     const regex = /^[A-Za-zÀ-ÖØ-öø-ÿ'\s]+$/; // Permitir letras, apóstrofe y espacios
     // Eliminar caracteres no válidos
@@ -76,6 +77,8 @@ const truncarMiles = (valor) => {
 
 
 
+
+
 //asegurarnos de que no contenga acentos, diéresis o 
 //caracteres no válidos, excepto los caracteres especiales permitidos como guion (-), barra (/), y el símbolo &.
 
@@ -120,7 +123,6 @@ export const validarContenido = (data) => {
         return row; // Retornar la fila validada
     });
 };
-
 
 export const validarCampos = (data) => {
     return data.map((row) => {
@@ -177,7 +179,6 @@ export const validarCampos = (data) => {
         return row;
     });
 };
-
 
 export const procesarArchivos = (sociosData, prestamosData) => {
 
