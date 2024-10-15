@@ -9,6 +9,7 @@ import {
 // Asegúrate de importar generarArchivoTxt si está en otro archivo
 import { generarArchivoTxt } from './utils/generarArchivoTxt'; // Ajusta la ruta según la ubicación real
 import { generarArchivoAltasCompleto } from './utils/generarAltas'; // Importar la función si está en un archivo separado
+import { generarArchivoActualizacionesCompleto } from './utils/generarActualizaciones'; // Ajusta la ruta si es necesario
 
 
 function App() {
@@ -57,14 +58,13 @@ function App() {
                     const mergedData = procesarArchivos(sociosData, prestamosData);
                     // Filtrar registros de altas
                     const altas = mergedData.filter(deudor => deudor.Estado_INAES === 'alta');
+                    const actualizaciones = mergedData.filter(deudor => deudor.Estado_INAES === 'actualizacion');
 
-
-                    // Generar y descargar el archivo
-                    //generarArchivoTxt(mergedData);
-
-                    // Generar el archivo de altas
                     // Generar el archivo de altas completo
                     generarArchivoAltasCompleto(altas);
+
+                    // Generar el archivo de actualizaciones completo
+                    generarArchivoActualizacionesCompleto(actualizaciones);
 
                     setIsProcessing(false); // Ocultar el loader
                     setStatusMessage("Archivos procesados correctamente.");
