@@ -10,7 +10,7 @@ export const generarArchivoAltas = (data) => {
 
     // Crear un blob con el contenido del archivo y descargarlo con file-saver
     const blob = new Blob([contenido], { type: 'text/plain;charset=ascii' });
-    saveAs(blob, 'alta_deudores.txt');
+    saveAs(blob, 'altas.txt');
 
     console.log("Archivo TXT de altas generado y listo para descarga.");
 };
@@ -34,7 +34,7 @@ const generarContenidoAltas = (data) => {
             + `${convertirProvincia(row['PROVINCIA'] || '').padStart(1, ' ')}`      // REG-PROVINCIA (Convierto la provincia según tabla)
             + `${(row['CODIGO POSTAL'] || '').toString().padStart(8, ' ')}`         // REG-COD-POSTAL
             + `${(row['TELEFONO_FIJO'] || '').toString().padStart(14, ' ')}`        // REG-TELEFONO-FIJO
-            + `${(row['TELEFONO_CELULAR'] || '').toString().padStart(14, ' ')}`     // REG-TELEFONO-CELULAR
+            + `${(row['Celulares'] || '').toString().padStart(14, ' ')}`     // REG-TELEFONO-CELULAR
             + `${convertirNacionalidad(row['NACIONALIDAD'] || '').padStart(1, ' ')}`// REG-NACIONALIDAD (Usar la función de la tabla de nacionalidades)
             + `${''.padStart(2, ' ')}`                                              // REG-RETORNO
             + `${''.padStart(69, ' ')}\r\n`;                                        // SIN USO (BLANCOS)

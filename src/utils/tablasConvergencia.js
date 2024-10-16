@@ -38,7 +38,7 @@ export const convertirTipoSociedadPersona = (tipoSociedad) => {
         'femenino': 'F',
         'no declara': 'I'
     };
-    
+
     return sociedades[tipoSociedad.toLowerCase()] || 'I'; // Convertir a minúsculas y asignar 'I' por defecto
 };
 
@@ -58,12 +58,15 @@ export const convertirGrado = (grado) => {
 // Función de conversión para nacionalidad
 export const convertirNacionalidad = (nacionalidad) => {
     const nacionalidades = {
-        'Argentina': 'A',
-        'Extranjera': 'E',
-        'Desconocida': ' '
+        'argentina': 'A',
+        'extranjera': 'E',
+        'desconocida': ' '
     };
-    return nacionalidades[nacionalidad] || ' ';
+
+    // Convertir a minúsculas antes de buscar en el diccionario
+    return nacionalidades[nacionalidad.toLowerCase()] || ' ';
 };
+
 
 // Función de conversión para estado de deuda
 export const convertirEstadoDeuda = (estado) => {

@@ -7,7 +7,6 @@ import {
 
 
 // Asegúrate de importar generarArchivoTxt si está en otro archivo
-import { generarArchivoTxt } from './utils/generarArchivoTxt'; // Ajusta la ruta según la ubicación real
 import { generarArchivoAltasCompleto } from './utils/generarAltas'; // Importar la función si está en un archivo separado
 import { generarArchivoActualizacionesCompleto } from './utils/generarActualizaciones'; // Ajusta la ruta si es necesario
 

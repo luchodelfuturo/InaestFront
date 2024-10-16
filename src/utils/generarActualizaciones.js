@@ -7,7 +7,7 @@ export const generarArchivoActualizaciones = (data) => {
 
     // Crear un blob con el contenido del archivo y descargarlo con file-saver
     const blob = new Blob([contenido], { type: 'text/plain;charset=ascii' });
-    saveAs(blob, 'actualizacion_deudores.txt');
+    saveAs(blob, 'actualizaciones.txt');
 
     console.log("Archivo TXT de actualizaciones generado y listo para descarga.");
 };
