@@ -75,10 +75,6 @@ const truncarMiles = (valor) => {
     return valor; // Si no es un número, devolver el valor tal cual
 };
 
-
-
-
-
 //asegurarnos de que no contenga acentos, diéresis o 
 //caracteres no válidos, excepto los caracteres especiales permitidos como guion (-), barra (/), y el símbolo &.
 
@@ -174,7 +170,36 @@ export const validarCampos = (data) => {
             return null;
         }
 
-        // Continuar con otras validaciones...
+        // Validación del campo "CUIT"
+        if (!row['NRO. de CUIL'] || String(row['NRO. de CUIL']).trim() === '') {
+            Swal.fire({
+                icon: 'error',
+                title: `Error en el LEGAJO ${legajo}`,
+                text: `El campo "CUIT" en el LEGAJO ${legajo} es obligatorio.`,
+            });
+            return null; // Detener el proceso si el campo es obligatorio
+        }
+
+
+        // Validación del campo "TIPO DOC"
+        if (!row['TIPO DOC'] || row['TIPO DOC'].trim() === '') {
+            Swal.fire({
+                icon: 'error',
+                title: `Error en el LEGAJO ${legajo}`,
+                text: `El campo "Tipo de Documento" en el LEGAJO ${legajo} es obligatorio.`,
+            });
+            return null; // Detener el proceso si el campo es obligatorio
+        }
+
+        // Validación del campo "NUMERO" (Número de documento)
+        if (!row['NUMERO'] || String(row['NUMERO']).trim() === '') {
+            Swal.fire({
+                icon: 'error',
+                title: `Error en el LEGAJO ${legajo}`,
+                text: `El campo "Número de Documento" en el LEGAJO ${legajo} es obligatorio.`,
+            });
+            return null; // Detener el proceso si el campo es obligatorio
+        }
 
         return row;
     });

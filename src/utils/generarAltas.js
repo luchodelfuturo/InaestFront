@@ -1,5 +1,8 @@
 import { saveAs } from 'file-saver';
 
+import { convertirProvincia, convertirTipoDocumento, convertirTipoSociedadPersona, convertirEstadoCivil, convertirNacionalidad } from './tablasConvergencia.js'; // Asegúrate de tener estas funciones
+
+
 // Función para generar el archivo de altas
 export const generarArchivoAltas = (data) => {
     // Generar el contenido de las altas
@@ -17,22 +20,25 @@ const generarContenidoAltas = (data) => {
     let contenido = '';
 
     data.forEach(row => {
-        const linea = `${(row['NRO. de CUIL'] || '').toString().padStart(11, ' ')}`
-            + `${(row['TIPO DOC'] || '').toString().padStart(3, ' ')}`
-            + `${(row['NUMERO'] || '').toString().padStart(20, ' ')}`
-            + `${(row['Apellido y Nombres'] || '').toString().padStart(70, ' ')}`
-            + `${(row['Fecha Ing Mutal'] || '').toString().padStart(8, ' ')}`
-            + `${(row['Sexo'] || '').toString().padStart(1, ' ')}`
-            + `${(row['ESTADO DE PMOS '] || '').toString().padStart(1, ' ')}`
-            + `${(row['Domicilio'] || '').toString().padStart(40, ' ')}`
-            + `${(row['LOCALIDAD'] || '').toString().padStart(20, ' ')}`
-            + `${(row['PROVINCIA.'] || '').toString().padStart(1, ' ')}`
-            + `${(row['CODIGO POSTAL'] || '').toString().padStart(8, ' ')}`
-            + `${(row['TELEFONO_FIJO'] || '').toString().padStart(14, ' ')}`
-            + `${(row['TELEFONO_CELULAR'] || '').toString().padStart(14, ' ')}`
-            + `${(row['NACIONALIDAD'] || '').toString().padStart(1, ' ')}`
-            + `${(row['RETORNO'] || '').toString().padStart(2, ' ')}`
-            + `${''.padStart(69, ' ')}\r\n`;
+        const linea = `${(row['NRO. de CUIL'] || '').toString().padStart(11, ' ')}` // REG-CUIT-REPORTADO
+            + `${convertirTipoDocumento(row['TIPO DOC'] || '').padStart(3, ' ')}`    // REG-TIPO-DOCUMENTO (Convierto el tipo de documento según la tabla)
+            + `${(row['NUMERO'] || '').toString().padStart(20, ' ')}`               // REG-NRO-DOCUMENTO
+            + `${''.padStart(16, ' ')}`                                             // SIN USO (BLANCOS)
+            + `${(row['Apellido y Nombres'] || '').toString().padStart(70, ' ')}`   // REG-APELLIDO-Y-NOMBRE
+            + `${(row['FECHA NACIMIENTO'] || '').toString().padStart(8, ' ')}`      // REG-FECHA-NACIMIENTO (Formato AAAAMMDD)
+            + `${''.padStart(1, ' ')}`                                              // SIN USO (BLANCOS)
+            + `${convertirTipoSociedadPersona(row['TIPO_SOCIEDAD_PERSONA'] || '').padStart(1, ' ')}` // REG-TIPO-SOCIEDAD-PERSONA (Utilizamos la tabla para convertir)
+            + `${convertirEstadoCivil(row['EST_CIVIL'] || '').padStart(1, ' ')}`    // REG-EST-CIVIL (Conversión desde la tabla de estado civil)
+            + `${(row['Domicilio'] || '').toString().padStart(40, ' ')}`            // REG-DIRECCION
+            + `${(row['LOCALIDAD'] || '').toString().padStart(20, ' ')}`            // REG-LOCALIDAD
+            + `${convertirProvincia(row['PROVINCIA'] || '').padStart(1, ' ')}`      // REG-PROVINCIA (Convierto la provincia según tabla)
+            + `${(row['CODIGO POSTAL'] || '').toString().padStart(8, ' ')}`         // REG-COD-POSTAL
+            + `${(row['TELEFONO_FIJO'] || '').toString().padStart(14, ' ')}`        // REG-TELEFONO-FIJO
+            + `${(row['TELEFONO_CELULAR'] || '').toString().padStart(14, ' ')}`     // REG-TELEFONO-CELULAR
+            + `${convertirNacionalidad(row['NACIONALIDAD'] || '').padStart(1, ' ')}`// REG-NACIONALIDAD (Usar la función de la tabla de nacionalidades)
+            + `${''.padStart(2, ' ')}`                                              // REG-RETORNO
+            + `${''.padStart(69, ' ')}\r\n`;                                        // SIN USO (BLANCOS)
+
         contenido += linea;
     });
 
