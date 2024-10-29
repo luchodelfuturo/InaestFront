@@ -2,7 +2,6 @@
 // validaciones
 import Swal from 'sweetalert2';
 
-
 export const validarNombre = (nombre, legajo) => {
     const regex = /^[A-Za-zÀ-ÖØ-öø-ÿ'\s]+$/; // Permitir letras, apóstrofe y espacios
     // Eliminar caracteres no válidos
