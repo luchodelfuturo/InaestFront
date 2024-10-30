@@ -67,82 +67,81 @@ const esNumero = (valor) => {
     return !isNaN(valor) && !isNaN(parseFloat(valor)); // Verifica si es un número válido
 };
 
-const truncarMiles = (valor) => {
-    if (esNumero(valor)) {
-        return Math.floor(valor / 1000); // Truncar en miles
+export const truncarMiles = (valor) => {
+    const numero = parseFloat(valor);
+    if (!isNaN(numero)) {
+        return Math.floor(numero / 1000); // Trunca a miles de pesos
     }
-    return valor; // Si no es un número, devolver el valor tal cual
+    return 0; // Retorna 0 si no es un número válido
 };
+
 
 //asegurarnos de que no contenga acentos, diéresis o 
 //caracteres no válidos, excepto los caracteres especiales permitidos como guion (-), barra (/), y el símbolo &.
 
 export const validarContenido = (data) => {
-    const camposSaldos = ['CUOTA', 'CUOTA MUTUAL', 'CUOTA SEPTIEMBRE', 'DEUDA', 'IMPORTE', 'TOTAL'];
+    const camposSaldos = [
+        'IMPORTE CUOTA', 
+        'MONTO ACORDADO', 
+        'AMORT DE CAPITAL', 
+        'SALDO TOTAL', 
+        'SALDO VENCIDO', 
+        'SALDO DE DEUDA'
+    ];
 
     return data.map((row) => {
-        // Iterar sobre cada campo del objeto (fila de datos)
         for (let key in row) {
             if (row.hasOwnProperty(key)) {
                 let valor = row[key];
 
-                // Si el valor es numérico y es uno de los campos de saldos, truncar en miles de pesos
+                // Truncar en miles de pesos si es un campo de saldo
                 if (camposSaldos.includes(key) && esNumero(valor)) {
                     row[key] = truncarMiles(valor);
-                    continue; // Pasar al siguiente campo
+                    continue;
                 }
 
-                // Si el valor es numérico y no es un saldo, no hacer nada
+                // Si es numérico y no es saldo, continuar
                 if (esNumero(valor)) {
-                    continue; // Saltar la validación para este campo, ya que es numérico
+                    continue;
                 }
 
-                // Convertir a string si es necesario
-                if (valor !== null && valor !== undefined) {
-                    valor = String(valor);
-                } else {
-                    valor = ''; // Si es null o undefined, asignar un valor vacío
-                }
-
-                // Reemplazar ñ por n, eliminar acentos y diéresis
+                // Convertir a string, reemplazar ñ y eliminar acentos
+                valor = valor ? String(valor) : '';
                 valor = eliminarAcentos(reemplazarEnie(valor));
 
-                // Permitir solo letras, números, espacios, guion, barra y símbolo &
+                // Permitir solo caracteres válidos
                 valor = valor.replace(/[^A-Za-z0-9\s\-\/&]/g, '');
-
-                // Asignar el valor procesado de vuelta al objeto
                 row[key] = valor;
             }
         }
-
-        return row; // Retornar la fila validada
+        return row;
     });
 };
 
+
 export const validarCampos = (data) => {
     return data.map((row) => {
-        const legajo = row['LEGAJO'] || 'sin legajo'; // Valor del LEGAJO o un valor por defecto si no existe
+        const legajo = row['NRO LEGAJO'] || 'sin legajo'; // Ajuste aquí para el nuevo nombre
 
-        // Validación del campo "Apellido y Nombres" (incluyendo reemplazo de ñ por n)
-        if (row['Apellido y Nombres']) {
-            let nombreSinEnie = reemplazarEnie(row['Apellido y Nombres']); // Reemplazar ñ por n
+        // Validación del campo "APELLIDO Y NOMBRE"
+        if (row['APELLIDO Y NOMBRE']) {
+            let nombreSinEnie = reemplazarEnie(row['APELLIDO Y NOMBRE']); // Ajuste para el nuevo nombre
             const nombreValidado = validarNombre(nombreSinEnie, legajo);
             if (!nombreValidado) {
                 return null; // Si la validación falla, detener el proceso
             }
-            row['Apellido y Nombres'] = nombreValidado; // Guardar el nombre modificado
+            row['APELLIDO Y NOMBRE'] = nombreValidado; // Guardar el nombre modificado
         }
 
-        // Validación del campo "Domicilio" (Obligatorio, incluyendo reemplazo de ñ por n)
+        // Validación del campo "Domicilio" (Obligatorio)
         if (row['Domicilio']) {
-            let domicilioSinEnie = reemplazarEnie(row['Domicilio']); // Reemplazar ñ por n
+            let domicilioSinEnie = reemplazarEnie(row['Domicilio']);
             const domicilioValidado = validarDireccion(domicilioSinEnie, legajo, 'Domicilio');
             if (!domicilioValidado) {
                 return null; // Si la validación falla, detener el proceso
             }
-            row['Domicilio'] = domicilioValidado; // Guardar el domicilio modificado
+            row['Domicilio'] = domicilioValidado;
         } else {
-            // Mostrar un mensaje si el campo "Domicilio" está vacío
             Swal.fire({
                 icon: 'error',
                 title: `Error en el LEGAJO ${legajo}`,
@@ -151,16 +150,15 @@ export const validarCampos = (data) => {
             return null;
         }
 
-        // Validación del campo "Altura" (Obligatorio, aunque no debería tener ñ, lo consideramos)
+        // Validación del campo "Altura" (Obligatorio)
         if (row['Altura'] !== undefined && row['Altura'] !== null) {
-            let alturaSinEnie = reemplazarEnie(String(row['Altura'])); // Convertir a string y reemplazar ñ por n
+            let alturaSinEnie = reemplazarEnie(String(row['Altura']));
             const alturaValidada = validarDireccion(alturaSinEnie, legajo, 'Altura');
             if (!alturaValidada) {
                 return null; // Si la validación falla, detener el proceso
             }
-            row['Altura'] = alturaValidada; // Guardar la altura modificada
+            row['Altura'] = alturaValidada;
         } else {
-            // Mostrar un mensaje si el campo "Altura" está vacío
             Swal.fire({
                 icon: 'error',
                 title: `Error en el LEGAJO ${legajo}`,
@@ -169,25 +167,24 @@ export const validarCampos = (data) => {
             return null;
         }
 
-        // Validación del campo "CUIT"
+        // Validación del campo "NRO. de CUIL"
         if (!row['NRO. de CUIL'] || String(row['NRO. de CUIL']).trim() === '') {
             Swal.fire({
                 icon: 'error',
                 title: `Error en el LEGAJO ${legajo}`,
-                text: `El campo "CUIT" en el LEGAJO ${legajo} es obligatorio.`,
+                text: `El campo "NRO. de CUIL" en el LEGAJO ${legajo} es obligatorio.`,
             });
-            return null; // Detener el proceso si el campo es obligatorio
+            return null;
         }
-
 
         // Validación del campo "TIPO DOC"
         if (!row['TIPO DOC'] || row['TIPO DOC'].trim() === '') {
             Swal.fire({
                 icon: 'error',
                 title: `Error en el LEGAJO ${legajo}`,
-                text: `El campo "Tipo de Documento" en el LEGAJO ${legajo} es obligatorio.`,
+                text: `El campo "TIPO DOC" en el LEGAJO ${legajo} es obligatorio.`,
             });
-            return null; // Detener el proceso si el campo es obligatorio
+            return null;
         }
 
         // Validación del campo "NUMERO" (Número de documento)
@@ -195,14 +192,15 @@ export const validarCampos = (data) => {
             Swal.fire({
                 icon: 'error',
                 title: `Error en el LEGAJO ${legajo}`,
-                text: `El campo "Número de Documento" en el LEGAJO ${legajo} es obligatorio.`,
+                text: `El campo "NUMERO" en el LEGAJO ${legajo} es obligatorio.`,
             });
-            return null; // Detener el proceso si el campo es obligatorio
+            return null;
         }
 
         return row;
     });
 };
+
 
 export const procesarArchivos = (sociosData, prestamosData) => {
     console.log("Procesando archivos...");
@@ -227,7 +225,7 @@ export const procesarArchivos = (sociosData, prestamosData) => {
     // Validar los datos procesados
     const datosValidados = validarCampos(mergedData);
 
-    if (!datosValidados) {
+    if (!datosValidados || datosValidados.includes(null)) {
         console.log("Error durante la validación de campos");
         return null; // Detener si la validación de campos falla
     }
@@ -238,5 +236,24 @@ export const procesarArchivos = (sociosData, prestamosData) => {
     console.log("Archivos procesados con éxito");
     return datosProcesados;
 };
+
+
+export const clasificarRegistros = (data) => {
+    const altas = [];
+    const actualizaciones = [];
+
+    data.forEach(row => {
+        const cuotasAbonadas = parseInt(row['CUOTAS ABONADAS'], 10); // Convertir a entero
+
+        if (cuotasAbonadas === 0 || cuotasAbonadas === 1) {
+            altas.push(row); // Clasificar como alta
+        } else if (cuotasAbonadas > 1) {
+            actualizaciones.push(row); // Clasificar como actualización
+        }
+    });
+
+    return { altas, actualizaciones };
+};
+
 
 
