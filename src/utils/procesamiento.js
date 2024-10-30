@@ -205,21 +205,24 @@ export const validarCampos = (data) => {
 };
 
 export const procesarArchivos = (sociosData, prestamosData) => {
-
     console.log("Procesando archivos...");
     console.log("prestamos data ", prestamosData);
 
+    // Crear un mapa de socios usando `LEGAJO BBVA` convertido a cadena
     const sociosMap = sociosData.reduce((map, socio) => {
-        map[socio['LEGAJO BBVA']] = socio;
+        const legajoBBVA = String(socio['LEGAJO BBVA']);
+        map[legajoBBVA] = socio;
         return map;
     }, {});
 
+    // Combinar los datos de préstamos con los datos de socios usando `NRO LEGAJO` convertido a cadena
     const mergedData = prestamosData.map(prestamo => {
-        const socio = sociosMap[prestamo['LEGAJO']] || {};
+        const nroLegajo = String(prestamo['NRO LEGAJO']);
+        const socio = sociosMap[nroLegajo] || {};
         return { ...prestamo, ...socio };
     });
 
-    console.log(mergedData);
+    console.log("merged data", mergedData);
 
     // Validar los datos procesados
     const datosValidados = validarCampos(mergedData);
@@ -235,4 +238,5 @@ export const procesarArchivos = (sociosData, prestamosData) => {
     console.log("Archivos procesados con éxito");
     return datosProcesados;
 };
+
 
