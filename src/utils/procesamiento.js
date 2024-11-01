@@ -76,9 +76,6 @@ export const truncarMiles = (valor) => {
 };
 
 
-//asegurarnos de que no contenga acentos, diéresis o 
-//caracteres no válidos, excepto los caracteres especiales permitidos como guion (-), barra (/), y el símbolo &.
-
 export const validarContenido = (data) => {
     const camposSaldos = [
         'IMPORTE CUOTA', 
@@ -118,7 +115,6 @@ export const validarContenido = (data) => {
     });
 };
 
-
 export const validarCampos = (data) => {
     return data.map((row) => {
         const legajo = row['NRO LEGAJO'] || 'sin legajo'; // Valor del LEGAJO o un valor por defecto si no existe
@@ -126,7 +122,7 @@ export const validarCampos = (data) => {
         try {
             // Validación del campo "Apellido y Nombres" (incluyendo reemplazo de ñ por n)
             if (row['Apellido y Nombres']) {
-                let nombreSinEnie = reemplazarEnie(row['Apellido y Nombres']); // Reemplazar ñ por n
+                let nombreSinEnie = reemplazarEnie(String(row['Apellido y Nombres'])); // Convertir a string y reemplazar ñ por n
                 const nombreValidado = validarNombre(nombreSinEnie, legajo);
                 if (!nombreValidado) {
                     console.warn(`Error en la validación de nombre para LEGAJO ${legajo}`);
@@ -137,7 +133,7 @@ export const validarCampos = (data) => {
 
             // Validación del campo "Domicilio" (Obligatorio)
             if (row['Domicilio']) {
-                let domicilioSinEnie = reemplazarEnie(row['Domicilio']);
+                let domicilioSinEnie = reemplazarEnie(String(row['Domicilio'])); // Convertir a string y reemplazar ñ por n
                 const domicilioValidado = validarDireccion(domicilioSinEnie, legajo, 'Domicilio');
                 if (!domicilioValidado) {
                     console.warn(`Error en la validación de domicilio para LEGAJO ${legajo}`);
@@ -145,22 +141,24 @@ export const validarCampos = (data) => {
                 }
                 row['Domicilio'] = domicilioValidado;
             } else {
-                console.warn(`El campo "Domicilio" es obligatorio para LEGAJO ${legajo}`);
-                return null;
+                row['Domicilio'] = '-'; // Completar con "-" si está vacío
             }
 
             // Validación del campo "Altura" (Obligatorio)
             if (row['Altura'] !== undefined && row['Altura'] !== null) {
-                let alturaValidada = validarDireccion(String(row['Altura']), legajo, 'Altura');
+                let alturaValidada = validarDireccion(String(row['Altura']), legajo, 'Altura'); // Convertir a string
                 if (!alturaValidada) {
                     console.warn(`Error en la validación de altura para LEGAJO ${legajo}`);
                     return null;
                 }
                 row['Altura'] = alturaValidada;
             } else {
-                console.warn(`El campo "Altura" es obligatorio para LEGAJO ${legajo}`);
-                return null;
+                row['Altura'] = '-'; // Completar con "-" si está vacío
             }
+
+            // Validación del campo "Piso" (Opcional)
+            const pisoValor = row['Piso'] !== undefined && row['Piso'] !== null ? String(row['Piso']).trim() : '-';
+            row['Piso'] = pisoValor ? validarDireccion(pisoValor, legajo, 'Piso') : '-'; // Validar contenido o asignar "-"
 
             return row;
         } catch (error) {
@@ -170,41 +168,6 @@ export const validarCampos = (data) => {
     }).filter(row => row !== null); // Filtrar cualquier fila que devuelva null
 };
 
-
-export const procesarArchivos = (sociosData, prestamosData) => {
-    console.log("Procesando archivos...");
-    console.log("prestamos data ", prestamosData);
-
-    // Crear un mapa de socios usando `LEGAJO BBVA` convertido a cadena
-    const sociosMap = sociosData.reduce((map, socio) => {
-        const legajoBBVA = String(socio['LEGAJO BBVA']);
-        map[legajoBBVA] = socio;
-        return map;
-    }, {});
-
-    // Combinar los datos de préstamos con los datos de socios usando `NRO LEGAJO` convertido a cadena
-    const mergedData = prestamosData.map(prestamo => {
-        const nroLegajo = String(prestamo['NRO LEGAJO']);
-        const socio = sociosMap[nroLegajo] || {};
-        return { ...prestamo, ...socio };
-    });
-
-    console.log("merged data", mergedData);
-
-    // Validar los datos procesados
-    const datosValidados = validarCampos(mergedData);
-
-    if (!datosValidados || datosValidados.includes(null)) {
-        console.log("Error durante la validación de campos");
-        return null; // Detener si la validación de campos falla
-    }
-
-    // Aplicar la validación de contenido a los datos procesados
-    const datosProcesados = validarContenido(datosValidados);
-
-    console.log("Archivos procesados con éxito");
-    return datosProcesados;
-};
 
 
 export const clasificarRegistros = (data) => {
@@ -224,6 +187,43 @@ export const clasificarRegistros = (data) => {
     });
 
     return { altas, actualizaciones };
+};
+
+export const procesarArchivos = (sociosData, prestamosData) => {
+    console.log("Procesando archivos...");
+
+       // Crear un mapa de socios usando `LEGAJO BBVA` convertido a cadena
+    const sociosMap = sociosData.reduce((map, socio) => {
+        const legajoBBVA = String(socio['LEGAJO BBVA']);
+        map[legajoBBVA] = socio;
+        return map;
+    }, {});
+
+    // Combinar los datos de préstamos con los datos de socios usando `NRO LEGAJO` convertido a cadena
+    const mergedData = prestamosData.map(prestamo => {
+        const nroLegajo = String(prestamo['NRO LEGAJO']);
+        const socio = sociosMap[nroLegajo] || {};
+        return { ...prestamo, ...socio };
+    });
+
+    console.log("merged data", mergedData);
+
+
+
+    // Validar los datos procesados
+    const datosValidados = validarCampos(mergedData);
+
+    if (!datosValidados || datosValidados.includes(null)) {
+        console.log("Error durante la validación de campos");
+        return null; // Detener si la validación de campos falla
+    }
+
+
+    // Aplicar la validación de contenido a los datos procesados
+    const datosProcesados = validarContenido(datosValidados);
+
+    console.log("Archivos procesados con éxito");
+    return datosProcesados;
 };
 
 

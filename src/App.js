@@ -43,11 +43,8 @@ function App() {
                 const sociosWorkbook = XLSX.read(arrayBuffer, { type: 'array' });
                 const sociosSheet = sociosWorkbook.Sheets[sociosWorkbook.SheetNames[0]];
                 const sociosData = XLSX.utils.sheet_to_json(sociosSheet);
-
-                // Filtrar filas no deseadas
-           
-
                 setStatusMessage("Leyendo archivo de préstamos...");
+
 
                 prestamosReader.onload = (e) => {
                     console.log("Leyendo archivo de préstamos...");
