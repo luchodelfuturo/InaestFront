@@ -121,84 +121,53 @@ export const validarContenido = (data) => {
 
 export const validarCampos = (data) => {
     return data.map((row) => {
-        const legajo = row['NRO LEGAJO'] || 'sin legajo'; // Ajuste aquí para el nuevo nombre
+        const legajo = row['NRO LEGAJO'] || 'sin legajo'; // Valor del LEGAJO o un valor por defecto si no existe
 
-        // Validación del campo "APELLIDO Y NOMBRE"
-        if (row['APELLIDO Y NOMBRE']) {
-            let nombreSinEnie = reemplazarEnie(row['APELLIDO Y NOMBRE']); // Ajuste para el nuevo nombre
-            const nombreValidado = validarNombre(nombreSinEnie, legajo);
-            if (!nombreValidado) {
-                return null; // Si la validación falla, detener el proceso
+        try {
+            // Validación del campo "Apellido y Nombres" (incluyendo reemplazo de ñ por n)
+            if (row['Apellido y Nombres']) {
+                let nombreSinEnie = reemplazarEnie(row['Apellido y Nombres']); // Reemplazar ñ por n
+                const nombreValidado = validarNombre(nombreSinEnie, legajo);
+                if (!nombreValidado) {
+                    console.warn(`Error en la validación de nombre para LEGAJO ${legajo}`);
+                    return null; // Omitir registro si falla la validación
+                }
+                row['Apellido y Nombres'] = nombreValidado;
             }
-            row['APELLIDO Y NOMBRE'] = nombreValidado; // Guardar el nombre modificado
-        }
 
-        // Validación del campo "Domicilio" (Obligatorio)
-        if (row['Domicilio']) {
-            let domicilioSinEnie = reemplazarEnie(row['Domicilio']);
-            const domicilioValidado = validarDireccion(domicilioSinEnie, legajo, 'Domicilio');
-            if (!domicilioValidado) {
-                return null; // Si la validación falla, detener el proceso
+            // Validación del campo "Domicilio" (Obligatorio)
+            if (row['Domicilio']) {
+                let domicilioSinEnie = reemplazarEnie(row['Domicilio']);
+                const domicilioValidado = validarDireccion(domicilioSinEnie, legajo, 'Domicilio');
+                if (!domicilioValidado) {
+                    console.warn(`Error en la validación de domicilio para LEGAJO ${legajo}`);
+                    return null;
+                }
+                row['Domicilio'] = domicilioValidado;
+            } else {
+                console.warn(`El campo "Domicilio" es obligatorio para LEGAJO ${legajo}`);
+                return null;
             }
-            row['Domicilio'] = domicilioValidado;
-        } else {
-            Swal.fire({
-                icon: 'error',
-                title: `Error en el LEGAJO ${legajo}`,
-                text: `El campo "Domicilio" en el LEGAJO ${legajo} es obligatorio.`,
-            });
-            return null;
-        }
 
-        // Validación del campo "Altura" (Obligatorio)
-        if (row['Altura'] !== undefined && row['Altura'] !== null) {
-            let alturaSinEnie = reemplazarEnie(String(row['Altura']));
-            const alturaValidada = validarDireccion(alturaSinEnie, legajo, 'Altura');
-            if (!alturaValidada) {
-                return null; // Si la validación falla, detener el proceso
+            // Validación del campo "Altura" (Obligatorio)
+            if (row['Altura'] !== undefined && row['Altura'] !== null) {
+                let alturaValidada = validarDireccion(String(row['Altura']), legajo, 'Altura');
+                if (!alturaValidada) {
+                    console.warn(`Error en la validación de altura para LEGAJO ${legajo}`);
+                    return null;
+                }
+                row['Altura'] = alturaValidada;
+            } else {
+                console.warn(`El campo "Altura" es obligatorio para LEGAJO ${legajo}`);
+                return null;
             }
-            row['Altura'] = alturaValidada;
-        } else {
-            Swal.fire({
-                icon: 'error',
-                title: `Error en el LEGAJO ${legajo}`,
-                text: `El campo "Altura" en el LEGAJO ${legajo} es obligatorio.`,
-            });
+
+            return row;
+        } catch (error) {
+            console.error(`Error procesando LEGAJO ${legajo}:`, error);
             return null;
         }
-
-        // Validación del campo "NRO. de CUIL"
-        if (!row['NRO. de CUIL'] || String(row['NRO. de CUIL']).trim() === '') {
-            Swal.fire({
-                icon: 'error',
-                title: `Error en el LEGAJO ${legajo}`,
-                text: `El campo "NRO. de CUIL" en el LEGAJO ${legajo} es obligatorio.`,
-            });
-            return null;
-        }
-
-        // Validación del campo "TIPO DOC"
-        if (!row['TIPO DOC'] || row['TIPO DOC'].trim() === '') {
-            Swal.fire({
-                icon: 'error',
-                title: `Error en el LEGAJO ${legajo}`,
-                text: `El campo "TIPO DOC" en el LEGAJO ${legajo} es obligatorio.`,
-            });
-            return null;
-        }
-
-        // Validación del campo "NUMERO" (Número de documento)
-        if (!row['NUMERO'] || String(row['NUMERO']).trim() === '') {
-            Swal.fire({
-                icon: 'error',
-                title: `Error en el LEGAJO ${legajo}`,
-                text: `El campo "NUMERO" en el LEGAJO ${legajo} es obligatorio.`,
-            });
-            return null;
-        }
-
-        return row;
-    });
+    }).filter(row => row !== null); // Filtrar cualquier fila que devuelva null
 };
 
 
@@ -239,6 +208,8 @@ export const procesarArchivos = (sociosData, prestamosData) => {
 
 
 export const clasificarRegistros = (data) => {
+
+    console.log("data en clasificar " , data)
     const altas = [];
     const actualizaciones = [];
 

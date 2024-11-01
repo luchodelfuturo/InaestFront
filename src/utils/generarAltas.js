@@ -8,9 +8,10 @@ export const generarArchivoAltas = (data) => {
     // Generar el contenido de las altas
     let contenido = generarContenidoAltas(data);
 
-    // Crear un blob con el contenido del archivo y descargarlo con file-saver
-    const blob = new Blob([contenido], { type: 'text/plain;charset=ascii' });
-    saveAs(blob, 'altas.txt');
+
+// Crear un blob con el contenido del archivo y descargarlo con el nombre "altas.txt"
+const blob = new Blob([contenido], { type: 'text/plain;charset=ascii' });
+saveAs(blob, 'altas.txt');
 
     console.log("Archivo TXT de altas generado y listo para descarga.");
 };
@@ -99,7 +100,7 @@ export const generarArchivoAltasCompleto = (data) => {
 
     // Crear el archivo TXT y descargarlo
     const blob = new Blob([contenido], { type: 'text/plain;charset=ascii' });
-    saveAs(blob, 'alta_deudores_completo.txt');
+    saveAs(blob, 'alta.txt');
 
     console.log("Archivo TXT de altas completo generado y listo para descarga.");
 };

@@ -1,5 +1,5 @@
 import { saveAs } from 'file-saver';
-import {  convertirProvincia, convertirTipoDocumento, convertirEstadoDeuda, convertirTipoCartera, convertirEstadoINAES } from './tablasConvergencia'; // Asegúrate de tener estas funciones
+import { convertirProvincia, convertirTipoDocumento, convertirEstadoDeuda, convertirTipoCartera, convertirEstadoINAES } from './tablasConvergencia'; // Asegúrate de tener estas funciones
 import {
     truncarMiles
 } from './procesamiento'; // Ajusta la ruta según la ubicación real
@@ -10,11 +10,12 @@ export const generarArchivoActualizaciones = (data) => {
 
     let contenido = generarContenidoActualizaciones(data);
 
-   
 
-    // Crear un blob con el contenido del archivo y descargarlo con file-saver
+
+    // Crear un blob con el contenido del archivo y descargarlo con el nombre "actualizaciones.txt"
     const blob = new Blob([contenido], { type: 'text/plain;charset=ascii' });
     saveAs(blob, 'actualizaciones.txt');
+
 
     console.log("Archivo TXT de actualizaciones generado y listo para descarga.");
 };
@@ -24,27 +25,28 @@ const generarContenidoActualizaciones = (data) => {
     let contenido = '';
 
     data.forEach(row => {
-        // Usar los valores truncados directamente
-        const compromisoCorriente = row['IMPORTE CUOTA'] || 0;
-        const saldoTotal = row['SALDO DE DEUDA'] || 0;
-
-        console.log("Compromiso Corriente:", compromisoCorriente);
-        console.log("Saldo Total:", saldoTotal);
+        // Verificar si "CUOTAS ABONADAS" es igual a "PLAN DE CUOTAS"
+        const esDeudaFinalizada = row['CUOTAS ABONADAS'] === row['PLAN DE CUOTAS'];
+        
+        // Definir valores para REG-ESTADO, REG-ESTADO-INAES, y REG-SALDO-TOTAL
+        const estadoInterno = esDeudaFinalizada ? 'F' : '1'; // "F" para finalización, "1" para normal
+        const estadoINAES = '1'; // Siempre "1" según normativa INAES
+        const saldoTotal = esDeudaFinalizada ? 0 : truncarMiles(row['SALDO DE DEUDA'] || 0);
 
         const linea = `${(row['NRO. de CUIL'] || '').toString().padStart(11, ' ')}`
             + `${convertirTipoDocumento(row['TIPO DOC'] || '').padStart(3, ' ')}`
             + `${(row['NUMERO'] || '').toString().padStart(20, ' ')}`
-            + `${''.padStart(16, ' ')}`                                                  // SIN USO (BLANCOS)
-            + `0`.padStart(3, ' ')                                                       // REG-DIAS-ATRASO
-            + `${convertirTipoCartera(row['Tipo de Cartera'] || '').padStart(2, ' ')}`   // REG-TIPO
-            + `1`.padStart(1, ' ')                                                       // REG-ESTADO
-            + `1`.padStart(1, ' ')                                                       // REG-ESTADO-INAES
-            + `${compromisoCorriente.toString().padStart(9, ' ')}`                       // REG-COMPROMISO-CORRIENTE
-            + `${saldoTotal.toString().padStart(9, ' ')}`                                // REG-SALDO-TOTAL
-            + `0`.padStart(9, ' ')                                                       // REG-SALDO-VENCIDO siempre 0
-            + `${''.padStart(2, ' ')}`                                                   // REG-RETORNO
-            + `${(row['Fecha Informacion'] || '').toString().padStart(6, ' ')}`          // REG-FECHA-INFORMACION
-            + `${''.padStart(208, ' ')}\r\n`;                                            // SIN USO (BLANCOS)
+            + `${''.padStart(16, ' ')}` // SIN USO (BLANCOS)
+            + `0`.padStart(3, ' ') // REG-DIAS-ATRASO
+            + `${convertirTipoCartera(row['Tipo de Cartera'] || '').padStart(2, ' ')}`
+            + `${estadoInterno.padStart(1, ' ')}` // REG-ESTADO (Condicional)
+            + `${estadoINAES.padStart(1, ' ')}` // REG-ESTADO-INAES (Siempre "1")
+            + `${truncarMiles(row['IMPORTE CUOTA'] || 0).toString().padStart(9, ' ')}`
+            + `${saldoTotal.toString().padStart(9, ' ')}` // REG-SALDO-TOTAL (Condicional)
+            + `0`.padStart(9, ' ') // REG-SALDO-VENCIDO siempre 0
+            + `${''.padStart(2, ' ')}` // REG-RETORNO
+            + `${(row['Fecha Informacion'] || '').toString().padStart(6, ' ')}`
+            + `${''.padStart(208, ' ')}\r\n`; // SIN USO (BLANCOS)
         
         contenido += linea;
     });
@@ -78,7 +80,6 @@ export const generarHeaderActualizaciones = () => {
 
     return header;
 };
-
 
 
 // Función para generar el tráiler de las actualizaciones
@@ -115,7 +116,7 @@ export const generarArchivoActualizacionesCompleto = (data) => {
 
     // Crear el archivo TXT y descargarlo
     const blob = new Blob([contenido], { type: 'text/plain;charset=ascii' });
-    saveAs(blob, 'actualizacion_deudores_completo.txt');
+    saveAs(blob, 'actualizacion.txt');
 
     console.log("Archivo TXT de actualizaciones completo generado y listo para descarga.");
 };
