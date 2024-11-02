@@ -168,8 +168,6 @@ export const validarCampos = (data) => {
     }).filter(row => row !== null); // Filtrar cualquier fila que devuelva null
 };
 
-
-
 export const clasificarRegistros = (data) => {
 
     console.log("data en clasificar " , data)
