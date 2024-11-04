@@ -75,7 +75,6 @@ export const truncarMiles = (valor) => {
     return 0; // Retorna 0 si no es un número válido
 };
 
-
 export const validarContenido = (data) => {
     const camposSaldos = [
         'IMPORTE CUOTA', 
