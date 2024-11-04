@@ -1,22 +1,18 @@
 import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
-import "./App.css"
+import "./App.css";
 import {
     procesarArchivos,
     clasificarRegistros
-} from './utils/procesamiento'; // Ajusta la ruta según la ubicación real
-
-
-// Asegúrate de importar generarArchivoTxt si está en otro archivo
-import { generarArchivoAltasCompleto } from './utils/generarAltas'; // Importar la función si está en un archivo separado
-import { generarArchivoActualizacionesCompleto } from './utils/generarActualizaciones'; // Ajusta la ruta si es necesario
-
+} from './utils/procesamiento';
+import { generarArchivoAltasCompleto } from './utils/generarAltas';
+import { generarArchivoActualizacionesCompleto } from './utils/generarActualizaciones';
 
 function App() {
     const [sociosFile, setSociosFile] = useState(null);
     const [prestamosFile, setPrestamosFile] = useState(null);
-    const [isProcessing, setIsProcessing] = useState(false); // Estado para el loader
-    const [statusMessage, setStatusMessage] = useState(''); // Estado para mostrar el estado
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [statusMessage, setStatusMessage] = useState('');
 
     const handleFileChange = (e, setFile) => {
         const file = e.target.files[0];
@@ -25,12 +21,12 @@ function App() {
             return;
         }
         setFile(file);
-        setStatusMessage(''); // Limpiar el mensaje de estado
+        setStatusMessage('');
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setIsProcessing(true); // Mostrar el loader
+        setIsProcessing(true);
         setStatusMessage("Leyendo archivo de socios...");
 
         try {
@@ -38,16 +34,13 @@ function App() {
             const prestamosReader = new FileReader();
 
             sociosReader.onload = (e) => {
-                console.log("Leyendo archivo de socios...");
                 const arrayBuffer = e.target.result;
                 const sociosWorkbook = XLSX.read(arrayBuffer, { type: 'array' });
                 const sociosSheet = sociosWorkbook.Sheets[sociosWorkbook.SheetNames[0]];
                 const sociosData = XLSX.utils.sheet_to_json(sociosSheet);
                 setStatusMessage("Leyendo archivo de préstamos...");
 
-
                 prestamosReader.onload = (e) => {
-                    console.log("Leyendo archivo de préstamos...");
                     const arrayBuffer = e.target.result;
                     const prestamosWorkbook = XLSX.read(arrayBuffer, { type: 'array' });
                     const prestamosSheet = prestamosWorkbook.Sheets[prestamosWorkbook.SheetNames[0]];
@@ -55,27 +48,21 @@ function App() {
 
                     const prestamosDataFiltrado = prestamosData.filter(row => row.hasOwnProperty('NRO LEGAJO') && row['NRO LEGAJO']);
 
-                    // Procesar los archivos
                     setStatusMessage("Procesando archivos...");
                     const mergedData = procesarArchivos(sociosData, prestamosDataFiltrado);
 
-                    // Clasificar registros en altas y actualizaciones según "CUOTAS ABONADAS"
                     const { altas, actualizaciones } = clasificarRegistros(mergedData);
 
-
-
-                    // Generar el archivo de altas completo
                     generarArchivoAltasCompleto(altas);
-
-                    // Generar el archivo de actualizaciones completo
                     generarArchivoActualizacionesCompleto(actualizaciones);
 
-                    setIsProcessing(false); // Ocultar el loader
+                    setIsProcessing(false);
                     setStatusMessage("Archivos procesados correctamente.");
 
-                    // Limpiar los archivos seleccionados
-                    setSociosFile(null);
-                    setPrestamosFile(null);
+                    // Recargar la página después de una breve pausa
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
                 };
 
                 prestamosReader.readAsArrayBuffer(prestamosFile);
@@ -85,11 +72,9 @@ function App() {
         } catch (error) {
             console.error("Error durante el procesamiento:", error);
             setIsProcessing(false);
-            setStatusMessage("Ocurrió un error al procesar los archivos. Verifica el formato.");
+            setStatusMessage("Ocurrió un error al procesar los archivos. Verifica los datos y el formato.");
         }
     };
-
-
 
     return (
         <div className="App">
@@ -118,8 +103,6 @@ function App() {
             {statusMessage && <p>{statusMessage}</p>}
         </div>
     );
-
-
 }
 
 export default App;
