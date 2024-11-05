@@ -38,6 +38,13 @@ function App() {
                 const sociosWorkbook = XLSX.read(arrayBuffer, { type: 'array' });
                 const sociosSheet = sociosWorkbook.Sheets[sociosWorkbook.SheetNames[0]];
                 const sociosData = XLSX.utils.sheet_to_json(sociosSheet);
+
+                // Asegurarse de que 'Telef.Fijo' esté presente en cada objeto
+                sociosData.forEach(row => {
+                    if (!row.hasOwnProperty("Telef.Fijo")) {
+                        row["Telef.Fijo"] = ""; // Rellenar con valor vacío si no existe
+                    }
+                });
                 setStatusMessage("Leyendo archivo de préstamos...");
 
                 prestamosReader.onload = (e) => {
@@ -60,9 +67,10 @@ function App() {
                     setStatusMessage("Archivos procesados correctamente.");
 
                     // Recargar la página después de una breve pausa
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 2000);
+
+                    // setTimeout(() => {
+                    //     window.location.reload();
+                    // }, 2000);
                 };
 
                 prestamosReader.readAsArrayBuffer(prestamosFile);

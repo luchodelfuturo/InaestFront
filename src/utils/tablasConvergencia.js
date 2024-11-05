@@ -58,13 +58,13 @@ export const convertirGrado = (grado) => {
 // Función de conversión para nacionalidad
 export const convertirNacionalidad = (nacionalidad) => {
     const nacionalidades = {
-        'argentina': 'A',
-        'extranjera': 'E',
-        'desconocida': ' '
+        'ARGENTINA': 'A',
+        'EXTRANJERO': 'E',
+        'DESCONOCIDA': ' '
     };
 
     // Convertir a minúsculas antes de buscar en el diccionario
-    return nacionalidades[nacionalidad.toLowerCase()] || ' ';
+    return nacionalidades[nacionalidad.toLowerCase()] || 'A';
 };
 
 
