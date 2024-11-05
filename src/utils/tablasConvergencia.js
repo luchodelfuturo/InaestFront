@@ -119,7 +119,7 @@ export const convertirTipoDocumento = (tipoDocumento) => {
         'Libreta Cívica': 'LCI',
         'Pasaporte': 'PSP'
     };
-    return documentos[tipoDocumento] || ' ';
+    return documentos[tipoDocumento] || 'DNI';
 };
 
 // Función de conversión para estado civil

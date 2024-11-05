@@ -2,6 +2,7 @@ import { saveAs } from 'file-saver';
 
 import { convertirProvincia, convertirTipoDocumento, convertirTipoSociedadPersona, convertirEstadoCivil, convertirNacionalidad } from './tablasConvergencia.js'; // Asegúrate de tener estas funciones
 
+import dayjs from 'dayjs';
 
 // Función para generar el archivo de altas
 export const generarArchivoAltas = (data) => {
@@ -21,24 +22,35 @@ const generarContenidoAltas = (data) => {
     let contenido = '';
 
     data.forEach(row => {
-        const linea = `${(row['NRO. de CUIL'] || '').toString().padStart(11, ' ')}` // REG-CUIT-REPORTADO
-            + `${convertirTipoDocumento(row['TIPO DOC'] || '').padStart(3, ' ')}`    // REG-TIPO-DOCUMENTO (Convierto el tipo de documento según la tabla)
-            + `${(row['NUMERO'] || '').toString().padStart(20, ' ')}`               // REG-NRO-DOCUMENTO
-            + `${''.padStart(16, ' ')}`                                             // SIN USO (BLANCOS)
-            + `${(row['Apellido y Nombres'] || '').toString().padStart(70, ' ')}`   // REG-APELLIDO-Y-NOMBRE
-            + `${(row['FECHA NACIMIENTO'] || '').toString().padStart(8, ' ')}`      // REG-FECHA-NACIMIENTO (Formato AAAAMMDD)
-            + `${''.padStart(1, ' ')}`                                              // SIN USO (BLANCOS)
-            + `${convertirTipoSociedadPersona(row['TIPO_SOCIEDAD_PERSONA'] || '').padStart(1, ' ')}` // REG-TIPO-SOCIEDAD-PERSONA (Utilizamos la tabla para convertir)
-            + `${convertirEstadoCivil(row['EST_CIVIL'] || '').padStart(1, ' ')}`    // REG-EST-CIVIL (Conversión desde la tabla de estado civil)
-            + `${(row['Domicilio'] || '').toString().padStart(40, ' ')}`            // REG-DIRECCION
-            + `${(row['LOCALIDAD'] || '').toString().padStart(20, ' ')}`            // REG-LOCALIDAD
-            + `${convertirProvincia(row['PROVINCIA'] || '').padStart(1, ' ')}`      // REG-PROVINCIA (Convierto la provincia según tabla)
-            + `${(row['CODIGO POSTAL'] || '').toString().padStart(8, ' ')}`         // REG-COD-POSTAL
-            + `${(row['TELEFONO_FIJO'] || '').toString().padStart(14, ' ')}`        // REG-TELEFONO-FIJO
-            + `${(row['Celulares'] || '').toString().padStart(14, ' ')}`     // REG-TELEFONO-CELULAR
-            + `${convertirNacionalidad(row['NACIONALIDAD'] || '').padStart(1, ' ')}`// REG-NACIONALIDAD (Usar la función de la tabla de nacionalidades)
-            + `${''.padStart(2, ' ')}`                                              // REG-RETORNO
-            + `${''.padStart(69, ' ')}\r\n`;                                        // SIN USO (BLANCOS)
+        // Convertir la fecha de nacimiento si es un número (formato Excel)
+        let fechaNacimiento = '';
+        if (row['FECHA NACIMIENTO'] && !isNaN(row['FECHA NACIMIENTO'])) {
+            // Excel usa 1900-01-01 como base, sumamos días y convertimos a formato
+            const fechaConvertida = dayjs('1900-01-01').add(row['FECHA NACIMIENTO'] - 2, 'day'); // Excel's day offset
+            fechaNacimiento = fechaConvertida.format('YYYYMMDD'); // Convertir a AAAAMMDD
+        } else {
+            fechaNacimiento = row['FECHA NACIMIENTO'] || ''; // Usar el valor actual si no es un número
+        }
+
+        const linea = 
+            `${(row['NRO. de CUIL'] || '').toString().padStart(11, ' ')}`                // REG-CUIT-REPORTADO
+            + `DNI`.padEnd(3, ' ')                                                      // REG-TIPO-DOCUMENTO
+            + `${(row['NUMERO'] || '').toString().padStart(20, ' ')}`                   // REG-NRO-DOCUMENTO
+            + `${''.padStart(16, ' ')}`                                                 // SIN USO (BLANCOS)
+            + `${(row['Apellido y Nombres'] || '').toString().padEnd(70, ' ')}`         // REG-APELLIDO-Y-NOMBRE
+            + `${fechaNacimiento.padStart(8, ' ')}`                                     // REG-FECHA-NACIMIENTO en formato AAAAMMDD
+            + `${''.padStart(1, ' ')}`                                                  // SIN USO (BLANCOS)
+            + `${convertirTipoSociedadPersona(row['TIPO_SOCIEDAD_PERSONA'] || '').padEnd(1, ' ')}` // REG-TIPO-SOCIEDAD-PERSONA
+            + `${convertirEstadoCivil(row['EST_CIVIL'] || '').padEnd(1, ' ')}`          // REG-EST-CIVIL
+            + `${(row['Domicilio'] || '').toString().padEnd(40, ' ')}`                  // REG-DIRECCION
+            + `${(row['LOCALIDAD'] || '').toString().padEnd(20, ' ')}`                  // REG-LOCALIDAD
+            + `${convertirProvincia(row['PROVINCIA'] || '').padEnd(1, ' ')}`            // REG-PROVINCIA
+            + `${(row['CODIGO POSTAL'] || '').toString().padStart(8, ' ')}`             // REG-COD-POSTAL
+            + `${(row['TELEFONO_FIJO'] || '').toString().padStart(14, ' ')}`            // REG-TELEFONO-FIJO
+            + `${(row['Celulares'] || '').toString().padStart(14, ' ')}`                // REG-TELEFONO-CELULAR
+            + `${convertirNacionalidad(row['NACIONALIDAD'] || '').padEnd(1, ' ')}`      // REG-NACIONALIDAD
+            + `${''.padStart(2, ' ')}`                                                  // REG-RETORNO
+            + `${''.padStart(69, ' ')}\r\n`;                                            // SIN USO (BLANCOS)
 
         contenido += linea;
     });
