@@ -5,6 +5,20 @@ import {
 } from './procesamiento'; // Ajusta la ruta según la ubicación real
 
 
+
+function obtenerFechaUltimoDia(periodo) {
+    const anio = parseInt(periodo.slice(0, 4), 10);
+    const mes = parseInt(periodo.slice(4, 6), 10);
+
+    // Crear la fecha para el último día del mes
+    const ultimoDia = new Date(anio, mes, 0).getDate();
+    
+    // Retornar en formato AAAAMMDD
+    return `${anio}${String(mes).padStart(2, '0')}${String(ultimoDia).padStart(2, '0')}`;
+}
+
+
+
 // Función para generar el archivo de actualizaciones
 export const generarArchivoActualizaciones = (data) => {
 
@@ -21,31 +35,23 @@ export const generarArchivoActualizaciones = (data) => {
 };
 
 // Función para generar el contenido de las actualizaciones en formato requerido
-const generarContenidoActualizaciones = (data) => {
+const generarContenidoActualizaciones = (data, periodoInformacion) => {
     let contenido = '';
 
     data.forEach(row => {
-        // Verificar si "CUOTAS ABONADAS" es igual a "PLAN DE CUOTAS"
-        const esDeudaFinalizada = row['CUOTAS ABONADAS'] === row['PLAN DE CUOTAS'];
-        
-        // Definir valores para REG-ESTADO, REG-ESTADO-INAES, y REG-SALDO-TOTAL
-        const estadoInterno = esDeudaFinalizada ? 'F' : '1'; // "F" para finalización, "1" para normal
-        const estadoINAES = '1'; // Siempre "1" según normativa INAES
-        const saldoTotal = esDeudaFinalizada ? 0 : truncarMiles(row['SALDO DE DEUDA'] || 0);
-
         const linea = `${(row['NRO. de CUIL'] || '').toString().padStart(11, ' ')}`
-            + `${convertirTipoDocumento(row['TIPO DOC'] || '').padStart(3, ' ')}`
+            + `DNI`.padStart(3, ' ') // Tipo de documento por defecto en este caso
             + `${(row['NUMERO'] || '').toString().padStart(20, ' ')}`
-            + `${''.padStart(16, ' ')}` // SIN USO (BLANCOS)
+            + `${''.padStart(16, ' ')}`
             + `0`.padStart(3, ' ') // REG-DIAS-ATRASO
-            + `${convertirTipoCartera(row['Tipo de Cartera'] || '').padStart(2, ' ')}`
-            + `${estadoInterno.padStart(1, ' ')}` // REG-ESTADO (Condicional)
-            + `${estadoINAES.padStart(1, ' ')}` // REG-ESTADO-INAES (Siempre "1")
-            + `${truncarMiles(row['IMPORTE CUOTA'] || 0).toString().padStart(9, ' ')}`
-            + `${saldoTotal.toString().padStart(9, ' ')}` // REG-SALDO-TOTAL (Condicional)
-            + `0`.padStart(9, ' ') // REG-SALDO-VENCIDO siempre 0
-            + `${''.padStart(2, ' ')}` // REG-RETORNO
-            + `${(row['Fecha Informacion'] || '').toString().padStart(6, ' ')}`
+            + `NI`.padStart(2, ' ') // Tipo de cartera (fijo como "NI")
+            + `F`.padStart(1, ' ') // Estado interno en caso de finalización
+            + `1`.padStart(1, ' ') // Estado INAES siempre 1
+            + `${(row['IMPORTE CUOTA'] || 0).toString().padStart(9, ' ')}`
+            + `${(row['SALDO DE DEUDA'] || 0).toString().padStart(9, ' ')}`
+            + `0`.padStart(9, ' ') // Saldo vencido siempre 0
+            + `${''.padStart(2, ' ')}`
+            + `${periodoInformacion.padStart(6, ' ')}` // REG-FECHA-INFORMACION en formato AAAAMM
             + `${''.padStart(208, ' ')}\r\n`; // SIN USO (BLANCOS)
         
         contenido += linea;
@@ -99,14 +105,14 @@ export const generarTrailerActualizaciones = (cantidadRegistros, sumatoriaSaldoT
 
 
 // Función principal para generar todo el archivo de actualizaciones con header, registros y trailer
-export const generarArchivoActualizacionesCompleto = (data) => {
+export const generarArchivoActualizacionesCompleto = (data, periodoInformacion) => {
     let contenido = '';
 
     // Generar el header
     contenido += generarHeaderActualizaciones();
 
-    // Generar los registros
-    contenido += generarContenidoActualizaciones(data);
+    // Generar los registros de actualizaciones
+    contenido += generarContenidoActualizaciones(data, periodoInformacion);
 
     // Sumar el saldo total para el tráiler
     const sumatoriaSaldoTotal = data.reduce((acc, row) => acc + (truncarMiles(row['SALDO DE DEUDA']) || 0), 0);

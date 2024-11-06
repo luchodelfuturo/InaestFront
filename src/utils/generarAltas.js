@@ -10,9 +10,9 @@ export const generarArchivoAltas = (data) => {
     let contenido = generarContenidoAltas(data);
 
 
-// Crear un blob con el contenido del archivo y descargarlo con el nombre "altas.txt"
-const blob = new Blob([contenido], { type: 'text/plain;charset=ascii' });
-saveAs(blob, 'altas.txt');
+    // Crear un blob con el contenido del archivo y descargarlo con el nombre "altas.txt"
+    const blob = new Blob([contenido], { type: 'text/plain;charset=ascii' });
+    saveAs(blob, 'altas.txt');
 
     console.log("Archivo TXT de altas generado y listo para descarga.");
 };
@@ -32,7 +32,7 @@ const generarContenidoAltas = (data) => {
             fechaNacimiento = row['FECHA NACIMIENTO'] || ''; // Usar el valor actual si no es un número
         }
 
-        const linea = 
+        const linea =
             `${(row['NRO. de CUIL'] || '').toString().padStart(11, ' ')}`                // REG-CUIT-REPORTADO
             + `DNI`.padEnd(3, ' ')                                                      // REG-TIPO-DOCUMENTO
             + `${(row['NUMERO'] || '').toString().padStart(20, ' ')}`                   // REG-NRO-DOCUMENTO
@@ -44,8 +44,8 @@ const generarContenidoAltas = (data) => {
             + `${convertirEstadoCivil(row['EST_CIVIL'] || '').padEnd(1, ' ')}`          // REG-EST-CIVIL
             + `${(row['Domicilio'] || '').toString().padEnd(40, ' ')}`                  // REG-DIRECCION
             + `${(row['LOCALIDAD'] || '').toString().padEnd(20, ' ')}`                  // REG-LOCALIDAD
-            + `${convertirProvincia(row['PROVINCIA'] || '').padEnd(1, ' ')}`            // REG-PROVINCIA
-            + `${(row['CODIGO POSTAL'] || '').toString().padStart(8, ' ')}`             // REG-COD-POSTAL
+            + `${convertirProvincia(row['PROVINCIA.'] || '').padEnd(1, ' ')}`            // REG-PROVINCIA
+            + `${(row['CODIGO POSTAL'] || '0').toString().padStart(8, ' ')}`        // REG-COD-POSTAL
             + `${(row['Telef.Fijo'] || '').toString().padStart(14, ' ')}`            // REG-TELEFONO-FIJO
             + `${(row['Celulares'] || '').toString().padStart(14, ' ')}`                // REG-TELEFONO-CELULAR
             + `${convertirNacionalidad(row['NACIONALIDAD'] || '').padEnd(1, ' ')}`      // REG-NACIONALIDAD
