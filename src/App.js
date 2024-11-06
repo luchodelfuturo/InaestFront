@@ -69,6 +69,7 @@ function App() {
 
                     // Procesar los archivos
                     setStatusMessage("Procesando archivos...");
+
                     const mergedData = procesarArchivos(sociosData, prestamosDataFiltrado);
 
                     // Clasificar registros en altas y actualizaciones según "CUOTAS ABONADAS"

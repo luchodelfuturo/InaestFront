@@ -3,22 +3,24 @@
 import Swal from 'sweetalert2';
 
 export const validarNombre = (nombre, legajo) => {
-    const regex = /^[A-Za-zÀ-ÖØ-öø-ÿ'\s]+$/; // Permitir letras, apóstrofe y espacios
-    // Eliminar caracteres no válidos
-    let nombreValidado = nombre.replace(/[^A-Za-zÀ-ÖØ-öø-ÿ'\s]/g, '');
+    // Expresión regular para solo letras, espacios, y apóstrofes, sin comas
+    const regex = /^[A-Za-zÀ-ÖØ-öø-ÿ'\s,]+$/; // Añade la coma (,) al regex para permitirla
 
-    // Verificar si el campo quedó vacío
+    // Modificamos también aquí para permitir la coma
+    let nombreValidado = nombre.replace(/[^A-Za-zÀ-ÖØ-öø-ÿ'\s,]/g, ''); // Permite letras, espacios, apóstrofe y coma
+
     if (!nombreValidado.trim()) {
         Swal.fire({
             icon: 'error',
             title: `Error en el LEGAJO ${legajo}`,
             text: `El campo "Apellido y Nombres" en el LEGAJO ${legajo} no puede estar vacío o contiene caracteres no válidos.`,
         });
-        return null; // En lugar de lanzar un error, devolvemos `null` o un valor que indique que falló la validación
+        return null;
     }
 
     return nombreValidado;
 };
+
 
 export const validarDireccion = (valor, legajo, campo) => {
     // Si el valor es null o undefined, lo convertimos a una cadena vacía
@@ -77,11 +79,11 @@ export const truncarMiles = (valor) => {
 
 export const validarContenido = (data) => {
     const camposSaldos = [
-        'IMPORTE CUOTA', 
-        'MONTO ACORDADO', 
-        'AMORT DE CAPITAL', 
-        'SALDO TOTAL', 
-        'SALDO VENCIDO', 
+        'IMPORTE CUOTA',
+        'MONTO ACORDADO',
+        'AMORT DE CAPITAL',
+        'SALDO TOTAL',
+        'SALDO VENCIDO',
         'SALDO DE DEUDA'
     ];
 
@@ -105,8 +107,10 @@ export const validarContenido = (data) => {
                 valor = valor ? String(valor) : '';
                 valor = eliminarAcentos(reemplazarEnie(valor));
 
-                // Permitir solo caracteres válidos
-                valor = valor.replace(/[^A-Za-z0-9\s\-\/&]/g, '');
+               
+                // Permitir letras, números, espacios, guion, barra, símbolo &, y coma
+                valor = valor.replace(/[^A-Za-z0-9\s\-\/&,]/g, '');
+
                 row[key] = valor;
             }
         }
@@ -121,14 +125,15 @@ export const validarCampos = (data) => {
         try {
             // Validación del campo "Apellido y Nombres" (incluyendo reemplazo de ñ por n)
             if (row['Apellido y Nombres']) {
-                let nombreSinEnie = reemplazarEnie(String(row['Apellido y Nombres'])); // Convertir a string y reemplazar ñ por n
+                let nombreSinEnie = reemplazarEnie(String(row['Apellido y Nombres']));
                 const nombreValidado = validarNombre(nombreSinEnie, legajo);
                 if (!nombreValidado) {
                     console.warn(`Error en la validación de nombre para LEGAJO ${legajo}`);
-                    return null; // Omitir registro si falla la validación
+                    return null;
                 }
-                row['Apellido y Nombres'] = nombreValidado;
+                row['Apellido y Nombres'] = nombreValidado; // Esta línea está reasignando el nombre sin la coma
             }
+
 
             // Validación del campo "Domicilio" (Obligatorio)
             if (row['Domicilio']) {
@@ -169,7 +174,7 @@ export const validarCampos = (data) => {
 
 export const clasificarRegistros = (data) => {
 
-    console.log("data en clasificar " , data)
+    console.log("data en clasificar ", data)
     const altas = [];
     const actualizaciones = [];
 
@@ -187,28 +192,38 @@ export const clasificarRegistros = (data) => {
 };
 
 export const procesarArchivos = (sociosData, prestamosData) => {
+
     console.log("Procesando archivos...");
 
-       // Crear un mapa de socios usando `LEGAJO BBVA` convertido a cadena
+    console.log("sociosData", sociosData)
+    console.log("prestamosData", prestamosData)
+
+    // Crear un mapa de socios usando `LEGAJO BBVA` convertido a cadena
     const sociosMap = sociosData.reduce((map, socio) => {
         const legajoBBVA = String(socio['LEGAJO BBVA']);
         map[legajoBBVA] = socio;
+        console.log(`sociosMap[${legajoBBVA}]`, map[legajoBBVA]); // Verifica que contiene 'Apellido y Nombres' con coma
         return map;
     }, {});
+
 
     // Combinar los datos de préstamos con los datos de socios usando `NRO LEGAJO` convertido a cadena
     const mergedData = prestamosData.map(prestamo => {
         const nroLegajo = String(prestamo['NRO LEGAJO']);
-        const socio = sociosMap[nroLegajo] || {};
-        return { ...prestamo, ...socio };
+        const socio = sociosMap[nroLegajo] || {}; // Extraer directamente desde el mapa
+
+        return { ...prestamo, ...socio }; // Mantenemos el objeto socio intacto al combinar
     });
 
-    console.log("merged data", mergedData);
+    console.log("merged data final:", mergedData); // Verifica si contiene 'Apellido y Nombres' con coma
+
 
 
 
     // Validar los datos procesados
     const datosValidados = validarCampos(mergedData);
+
+    console.log("datosValidados", datosValidados)
 
     if (!datosValidados || datosValidados.includes(null)) {
         console.log("Error durante la validación de campos");

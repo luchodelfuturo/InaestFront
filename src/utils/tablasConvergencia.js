@@ -3,7 +3,7 @@ export const convertirProvincia = (provincia) => {
     const provincias = {
         'SALTA': 'A',
         'BUENOS AIRES': 'B',
-        'CAPITAL FEDERAL': 'C',
+        'CABA': 'C',
         'SAN LUIS': 'D',
         'ENTRE RIOS': 'E',
         'LA RIOJA': 'F',

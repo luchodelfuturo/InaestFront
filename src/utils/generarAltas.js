@@ -45,7 +45,7 @@ const generarContenidoAltas = (data) => {
             + `${(row['Domicilio'] || '').toString().padEnd(40, ' ')}`                  // REG-DIRECCION
             + `${(row['LOCALIDAD'] || '').toString().padEnd(20, ' ')}`                  // REG-LOCALIDAD
             + `${convertirProvincia(row['PROVINCIA.'] || '').padEnd(1, ' ')}`            // REG-PROVINCIA
-            + `${(row['CODIGO POSTAL'] || '0').toString().padStart(8, ' ')}`        // REG-COD-POSTAL
+            + `${(row['CODIGO POSTAL'] ? row['CODIGO POSTAL'].toString().padStart(8, '0') : '00000000')}` // REG-COD-POSTAL
             + `${(row['Telef.Fijo'] || '').toString().padStart(14, ' ')}`            // REG-TELEFONO-FIJO
             + `${(row['Celulares'] || '').toString().padStart(14, ' ')}`                // REG-TELEFONO-CELULAR
             + `${convertirNacionalidad(row['NACIONALIDAD'] || '').padEnd(1, ' ')}`      // REG-NACIONALIDAD
