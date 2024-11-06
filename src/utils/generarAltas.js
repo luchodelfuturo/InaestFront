@@ -37,7 +37,7 @@ const generarContenidoAltas = (data) => {
             + `DNI`.padEnd(3, ' ')                                                      // REG-TIPO-DOCUMENTO
             + `${(row['NUMERO'] || '').toString().padStart(20, ' ')}`                   // REG-NRO-DOCUMENTO
             + `${''.padStart(16, ' ')}`                                                 // SIN USO (BLANCOS)
-            + `${(row['Apellido y Nombres'] || '').toString().padEnd(70, ' ')}`         // REG-APELLIDO-Y-NOMBRE
+            + `${((row['Apellido y Nombres'] || '').toString().split(',')[0].trim() + ', ' + (row['Apellido y Nombres'] || '').toString().split(',')[1]?.trim() || '').padEnd(70, ' ')}` // REG-APELLIDO-Y-NOMBRE
             + `${fechaNacimiento.padStart(8, ' ')}`                                     // REG-FECHA-NACIMIENTO en formato AAAAMMDD
             + `${''.padStart(1, ' ')}`                                                  // SIN USO (BLANCOS)
             + `${convertirTipoSociedadPersona(row['TIPO_SOCIEDAD_PERSONA'] || '').padEnd(1, ' ')}` // REG-TIPO-SOCIEDAD-PERSONA
