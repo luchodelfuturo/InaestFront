@@ -114,10 +114,10 @@ export const convertirTipoCartera = (tipoCartera) => {
 // Función de conversión para tipo de documento
 export const convertirTipoDocumento = (tipoDocumento) => {
     const documentos = {
-        'Documento Nacional de Identidad': 'DNI',
-        'Libreta de Enrolamiento': 'LEN',
-        'Libreta Cívica': 'LCI',
-        'Pasaporte': 'PSP'
+        'DNI': 'DNI',
+        'LEN': 'LEN',
+        'LCI': 'LCI',
+        'PSP': 'PSP'
     };
     return documentos[tipoDocumento] || 'DNI';
 };

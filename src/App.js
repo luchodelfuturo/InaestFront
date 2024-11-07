@@ -36,8 +36,15 @@ function App() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        // Validar que el usuario haya seleccionado un período
         if (!selectedDate) {
             setStatusMessage("Por favor, selecciona un mes y un año.");
+            return;
+        }
+
+        // Validar que los archivos hayan sido seleccionados
+        if (!sociosFile || !prestamosFile) {
+            setStatusMessage("Por favor, selecciona ambos archivos de socios y préstamos en el formato correcto.");
             return;
         }
 
@@ -63,12 +70,18 @@ function App() {
 
                     const prestamosDataFiltrado = prestamosData.filter(row => row.hasOwnProperty('NRO LEGAJO') && row['NRO LEGAJO']);
 
+                    // Procesar los archivos
                     setStatusMessage("Procesando archivos...");
+
                     const mergedData = procesarArchivos(sociosData, prestamosDataFiltrado);
 
+                    // Clasificar registros en altas y actualizaciones según "CUOTAS ABONADAS"
                     const { altas, actualizaciones } = clasificarRegistros(mergedData);
 
+                    // Generar el archivo de altas completo
                     generarArchivoAltasCompleto(altas, obtenerPeriodoInformacion());
+
+                    // Generar el archivo de actualizaciones completo
                     generarArchivoActualizacionesCompleto(actualizaciones, obtenerPeriodoInformacion());
 
                     setIsProcessing(false);
@@ -77,16 +90,25 @@ function App() {
                     setPrestamosFile(null);
                 };
 
-                prestamosReader.readAsArrayBuffer(prestamosFile);
+                if (prestamosFile) {
+                    prestamosReader.readAsArrayBuffer(prestamosFile);
+                } else {
+                    throw new Error("Archivo de préstamos no válido.");
+                }
             };
 
-            sociosReader.readAsArrayBuffer(sociosFile);
+            if (sociosFile) {
+                sociosReader.readAsArrayBuffer(sociosFile);
+            } else {
+                throw new Error("Archivo de socios no válido.");
+            }
         } catch (error) {
             console.error("Error durante el procesamiento:", error);
             setIsProcessing(false);
             setStatusMessage("Ocurrió un error al procesar los archivos. Verifica los datos y el formato.");
         }
     };
+
 
     // Función para recargar la página
     const handleReset = () => {
