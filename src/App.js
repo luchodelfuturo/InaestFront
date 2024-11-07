@@ -12,9 +12,8 @@ function App() {
     const [prestamosFile, setPrestamosFile] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [statusMessage, setStatusMessage] = useState('');
-    const [selectedDate, setSelectedDate] = useState(null); // Estado para el selector de fecha
+    const [selectedDate, setSelectedDate] = useState(null);
 
-    // Función para manejar cambios en los archivos de socios y préstamos
     const handleFileChange = (e, setFile) => {
         const file = e.target.files[0];
         if (file && file.type !== "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") {
@@ -25,21 +24,18 @@ function App() {
         setStatusMessage('');
     };
 
-    // Obtener el período de información en formato AAAAMM
     const obtenerPeriodoInformacion = () => {
         if (selectedDate) {
             const year = selectedDate.getFullYear();
-            const month = String(selectedDate.getMonth() + 1).padStart(2, '0'); // Mes en formato 01, 02, ..., 12
+            const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
             return `${year}${month}`;
         }
         return '';
     };
 
-    // Validar y procesar los archivos
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Validar que el usuario haya seleccionado un período
         if (!selectedDate) {
             setStatusMessage("Por favor, selecciona un mes y un año.");
             return;
@@ -67,18 +63,12 @@ function App() {
 
                     const prestamosDataFiltrado = prestamosData.filter(row => row.hasOwnProperty('NRO LEGAJO') && row['NRO LEGAJO']);
 
-                    // Procesar los archivos
                     setStatusMessage("Procesando archivos...");
-
                     const mergedData = procesarArchivos(sociosData, prestamosDataFiltrado);
 
-                    // Clasificar registros en altas y actualizaciones según "CUOTAS ABONADAS"
                     const { altas, actualizaciones } = clasificarRegistros(mergedData);
 
-                    // Generar el archivo de altas completo
                     generarArchivoAltasCompleto(altas, obtenerPeriodoInformacion());
-
-                    // Generar el archivo de actualizaciones completo
                     generarArchivoActualizacionesCompleto(actualizaciones, obtenerPeriodoInformacion());
 
                     setIsProcessing(false);
@@ -98,6 +88,11 @@ function App() {
         }
     };
 
+    // Función para recargar la página
+    const handleReset = () => {
+        window.location.reload();
+    };
+
     return (
         <div className="App">
             <h1>Cargar Planillas</h1>
@@ -113,17 +108,23 @@ function App() {
                         required
                     />
                 </div>
-                <div>
+                <div className="label">
                     <label>Planilla de Socios:</label>
                     <input type="file" onChange={(e) => handleFileChange(e, setSociosFile)} required />
                 </div>
-                <div>
+                <div className="label">
                     <label>Planilla de Préstamos:</label>
                     <input type="file" onChange={(e) => handleFileChange(e, setPrestamosFile)} required />
                 </div>
-                <button type="submit" disabled={isProcessing}>
-                    {isProcessing ? "Procesando..." : "Subir y Procesar"}
-                </button>
+
+                <div className="btn">
+                    <button type="submit" disabled={isProcessing}>
+                        {isProcessing ? "Procesando..." : "Subir y Procesar"}
+                    </button>
+                    <button type="button" onClick={handleReset} className="reset-button">
+                        Recargar
+                    </button>
+                </div>
             </form>
 
             {isProcessing && (
@@ -140,4 +141,6 @@ function App() {
 }
 
 export default App;
+
+
 
