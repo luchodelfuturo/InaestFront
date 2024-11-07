@@ -39,13 +39,16 @@ const generarContenidoActualizaciones = (data, periodoInformacion) => {
     let contenido = '';
 
     data.forEach(row => {
+        // Determina el estado interno basado en la condición de finalización
+        const estadoInterno = parseInt(row['CUOTAS ABONADAS']) === parseInt(row['PLAN DE CUOTAS']) ? 'F' : '1';
+
         const linea = `${(row['NRO. de CUIL'] || '').toString().padStart(11, ' ')}`
             + `DNI`.padStart(3, ' ') // Tipo de documento por defecto en este caso
             + `${(row['NUMERO'] || '').toString().padStart(20, ' ')}`
             + `${''.padStart(16, ' ')}`
             + `0`.padStart(3, ' ') // REG-DIAS-ATRASO
             + `NI`.padStart(2, ' ') // Tipo de cartera (fijo como "NI")
-            + `F`.padStart(1, ' ') // Estado interno en caso de finalización
+            + `${estadoInterno.padStart(1, ' ')}` // Estado interno, condicional
             + `1`.padStart(1, ' ') // Estado INAES siempre 1
             + `${(row['IMPORTE CUOTA'] || 0).toString().padStart(9, ' ')}`
             + `${(row['SALDO DE DEUDA'] || 0).toString().padStart(9, ' ')}`
@@ -59,6 +62,7 @@ const generarContenidoActualizaciones = (data, periodoInformacion) => {
 
     return contenido;
 };
+
 
 
 
@@ -115,7 +119,7 @@ export const generarArchivoActualizacionesCompleto = (data, periodoInformacion) 
     contenido += generarContenidoActualizaciones(data, periodoInformacion);
 
     // Sumar el saldo total para el tráiler
-    const sumatoriaSaldoTotal = data.reduce((acc, row) => acc + (truncarMiles(row['SALDO DE DEUDA']) || 0), 0);
+    const sumatoriaSaldoTotal = data.reduce((acc, row) => acc + ((row['SALDO DE DEUDA']) || 0), 0);
 
     // Generar el tráiler
     contenido += generarTrailerActualizaciones(data.length, sumatoriaSaldoTotal);
