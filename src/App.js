@@ -68,6 +68,9 @@ function App() {
                     const prestamosSheet = prestamosWorkbook.Sheets[prestamosWorkbook.SheetNames[0]];
                     const prestamosData = XLSX.utils.sheet_to_json(prestamosSheet, { range: 4 });
 
+                    console.log("prestamosData sin filtrar",prestamosData)
+    
+
                     const prestamosDataFiltrado = prestamosData.filter(row => row.hasOwnProperty('NRO LEGAJO') && row['NRO LEGAJO']);
 
                     // Procesar los archivos
